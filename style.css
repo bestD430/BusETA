@@ -67,4 +67,15 @@ border-radius:20px;
 padding:20px;
 35
 }
+
+36
+#warning-icon{
+37
+font-size:48px;
+38
+text-align:center;
+39
+margin-bottom:10px;
+40
+}
 }
