@@ -1,1 +1,3 @@
-console.log("warning.js loaded");
+document.getElementById("warning-msg").innerHTML =
+2
+"沒有警告";
