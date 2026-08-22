@@ -1,5 +1,5 @@
 body{
-background:#121212
+background:#121212;
 color:white;
 margin:0;
 font-family:-apple-system,BlinkMacSystemFont,sans-serif;
@@ -34,9 +34,9 @@ border-radius:20px;
 padding:20px;
 }
  
+}
 #warning-icon{
 font-size:48px;
 text-align:center;
 margin-bottom:10px;
 }
-``
