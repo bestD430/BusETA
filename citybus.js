@@ -1,21 +1,74 @@
-<!-- 九巴 / 龍運 卡片 -->
-<div class="card">
-  <h2>🚌 九巴／龍運</h2>
-  <div class="bus-inputs">
-    <input type="text" id="kmb-route" placeholder="路線 (例: E36A)" value="E36A">
-    <input type="text" id="kmb-stop-name" placeholder="站名 (例: 東涌纜車站)" value="東涌纜車站">
-    <button onclick="saveAndFetchKmb()">更新</button>
-  </div>
-  <div id="kmb" class="bus-eta-list">載入中...</div>
-</div>
+let citybusRoute = localStorage.getItem("citybus_route") || "A21";
+let citybusStopName = localStorage.getItem("citybus_stop_name") || "金鐘站";
 
-<!-- 城巴 卡片 -->
-<div class="card">
-  <h2>🚌 城巴</h2>
-  <div class="bus-inputs">
-    <input type="text" id="citybus-route" placeholder="路線 (例: A21)" value="A21">
-    <input type="text" id="citybus-stop-name" placeholder="站名 (例: 金鐘站)" value="金鐘站">
-    <button onclick="saveAndFetchCitybus()">更新</button>
-  </div>
-  <div id="citybus" class="bus-eta-list">載入中...</div>
-</div>
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("citybus-route").value = citybusRoute;
+  document.getElementById("citybus-stop-name").value = citybusStopName;
+  fetchCitybusETA();
+});
+
+async function fetchCitybusETA() {
+  const container = document.getElementById("citybus");
+  container.innerText = "搜尋車站中...";
+
+  try {
+    // 1. 取得該路線的車站列表 (預設 inbound)
+    const routeStopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${citybusRoute}/inbound`);
+    const routeStopsData = await routeStopsRes.json();
+
+    if (!routeStopsData.data || routeStopsData.data.length === 0) {
+      container.innerText = "找不到此路線";
+      return;
+    }
+
+    // 2. 尋找匹配的車站 ID
+    let targetStopId = null;
+    for (const stopItem of routeStopsData.data) {
+      const stopDetailRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${stopItem.stop}`);
+      const stopDetail = await stopDetailRes.json();
+      if (stopDetail.data && stopDetail.data.name_tc.includes(citybusStopName)) {
+        targetStopId = stopItem.stop;
+        break;
+      }
+    }
+
+    if (!targetStopId) {
+      container.innerText = "找不到此車站名稱";
+      return;
+    }
+
+    // 3. 抓取城巴 ETA 數據
+    container.innerText = "載入班次中...";
+    const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${targetStopId}/${citybusRoute}`);
+    const etaData = await etaRes.json();
+
+    if (!etaData.data || etaData.data.length === 0) {
+      container.innerText = "現時無到站班次";
+      return;
+    }
+
+    const list = etaData.data.slice(0, 3).map(item => {
+      if (!item.eta) return `${item.route} - 暫無資料`;
+      const diffMin = Math.round((new Date(item.eta) - new Date()) / 60000);
+      const text = diffMin <= 0 ? "即將到站" : `${diffMin} 分鐘`;
+      return `${item.route}往${item.dest_tc} - ${text}`;
+    });
+
+    container.innerHTML = list.join("<br>");
+  } catch (err) {
+    console.error(err);
+    container.innerText = "載入失敗";
+  }
+}
+
+function saveAndFetchCitybus() {
+  citybusRoute = document.getElementById("citybus-route").value.trim().toUpperCase();
+  citybusStopName = document.getElementById("citybus-stop-name").value.trim();
+
+  localStorage.setItem("citybus_route", citybusRoute);
+  localStorage.setItem("citybus_stop_name", citybusStopName);
+
+  fetchCitybusETA();
+}
+
+setInterval(fetchCitybusETA, 30000);
