@@ -55,3 +55,39 @@ body {
   font-size: 20px;
   font-weight: 700;
 }
+
+.bus-inputs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.bus-inputs input {
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  width: 45%;
+}
+
+.bus-inputs button {
+  background: #0a84ff;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bus-inputs button:active {
+  opacity: 0.7;
+}
+
+.bus-eta-list {
+  font-size: 16px;
+  line-height: 1.6;
+}
