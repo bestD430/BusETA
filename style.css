@@ -1,26 +1,42 @@
 body {
-  background: #121212;
-  color: white;
+  background-color: #000000;
+  color: #ffffff;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* 頂部時鐘面板 */
 .header {
-  background: #d9d9d9;
-  color: #000;
+  background-color: #d9d9d9;
+  color: #000000;
   text-align: center;
-  padding: 20px;
+  padding: 24px 10px;
 }
 
-#clock {
-  font-size: 80px;
-  font-weight: 700;
+#warning-icon {
+  font-size: 36px;
+  margin-bottom: 4px;
 }
 
 #date {
-  font-size: 28px;
+  font-size: 24px;
+  font-weight: 600;
 }
 
+#ampm {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+#clock {
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+/* 網格與卡片 */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -29,13 +45,13 @@ body {
 }
 
 .card {
-  background: #1c1c1e;
-  border-radius: 20px;
-  padding: 20px;
+  background-color: #1c1c1e;
+  border-radius: 16px;
+  padding: 18px;
 }
 
-#warning-icon {
-  font-size: 48px;
-  text-align: center;
-  margin-bottom: 10px;
+.card h2 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  font-weight: 700;
 }
