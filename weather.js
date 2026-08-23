@@ -1,41 +1,44 @@
 async function fetchWeatherData() {
   try {
+    // 呼叫香港天文台即時天氣 API
     const response = await fetch(
       "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc"
     );
     const data = await response.json();
 
-    // 取得溫度數據陣列
-    const tempTempData = data.temperature.data;
+    // 1. 取得天文台官方天氣圖案編號
+    const iconNumber = data.icon ? data.icon[0] : 50;
+    const iconUrl = `https://www.hko.gov.hk/images/HKO_flaticon/pic${iconNumber}.png`;
 
-    // 尋找東涌與尖沙咀的氣溫
-    const tungChungObj = tempTempData.find((item) => item.place === "東涌");
-    const tstObj = tempTempData.find((item) => item.place === "尖沙咀");
+    // 2. 搜尋東涌與尖沙咀氣溫
+    const tempArray = data.temperature.data;
+    const tungChung = tempArray.find((item) => item.place === "東涌");
+    const tst = tempArray.find((item) => item.place === "尖沙咀");
 
-    // 更新 東涌 顯示內容
-    if (tungChungObj) {
+    // 3. 渲染東涌資料
+    if (tungChung) {
       document.getElementById("tungchung").innerHTML = `
-        氣溫：${tungChungObj.value}°C<br>
-        更新時間：${data.updateTime.substring(11, 16)}
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+          <img src="${iconUrl}" alt="天氣圖案" style="width: 48px; height: 48px;">
+          <span style="font-size: 28px; font-weight: bold;">${tungChung.value}°C</span>
+        </div>
       `;
     }
 
-    // 更新 尖沙咀 顯示內容
-    if (tstObj) {
+    // 4. 渲染尖沙咀資料
+    if (tst) {
       document.getElementById("tst").innerHTML = `
-        氣溫：${tstObj.value}°C<br>
-        更新時間：${data.updateTime.substring(11, 16)}
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+          <img src="${iconUrl}" alt="天氣圖案" style="width: 48px; height: 48px;">
+          <span style="font-size: 28px; font-weight: bold;">${tst.value}°C</span>
+        </div>
       `;
     }
   } catch (error) {
-    console.error("獲取天氣資料失敗:", error);
-    document.getElementById("tungchung").innerHTML = "暫時無法取得數據";
-    document.getElementById("tst").innerHTML = "暫時無法取得數據";
+    console.error("無法取得天氣資料：", error);
   }
 }
 
-// 首次載入執行
+// 立即執行並設定每 5 分鐘自動更新
 fetchWeatherData();
-
-// 每 5 分鐘自動更新一次
 setInterval(fetchWeatherData, 300000);
