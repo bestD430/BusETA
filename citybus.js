@@ -12,7 +12,7 @@ async function fetchCitybusETA() {
   container.innerText = "搜尋車站中...";
 
   try {
-    // 1. 取得該路線的車站列表 (預設 inbound)
+    // 1. 取得該路線的車站列表
     const routeStopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${citybusRoute}/inbound`);
     const routeStopsData = await routeStopsRes.json();
 
@@ -21,13 +21,16 @@ async function fetchCitybusETA() {
       return;
     }
 
-    // 2. 尋找匹配的車站 ID
+    // 2. 只查詢該路線的車站詳細名稱（平行發送請求，提升速度）
+    const stopPromises = routeStopsData.data.slice(0, 15).map(s => 
+      fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${s.stop}`).then(r => r.json())
+    );
+    const stopsDetails = await Promise.all(stopPromises);
+
     let targetStopId = null;
-    for (const stopItem of routeStopsData.data) {
-      const stopDetailRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${stopItem.stop}`);
-      const stopDetail = await stopDetailRes.json();
-      if (stopDetail.data && stopDetail.data.name_tc.includes(citybusStopName)) {
-        targetStopId = stopItem.stop;
+    for (const detail of stopsDetails) {
+      if (detail.data && detail.data.name_tc.includes(citybusStopName)) {
+        targetStopId = detail.data.stop;
         break;
       }
     }
@@ -38,7 +41,6 @@ async function fetchCitybusETA() {
     }
 
     // 3. 抓取城巴 ETA 數據
-    container.innerText = "載入班次中...";
     const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${targetStopId}/${citybusRoute}`);
     const etaData = await etaRes.json();
 
