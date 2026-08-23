@@ -24,28 +24,27 @@
       <div id="tungchung">載入中...</div>
     </div>
 
-    <div class="card">
-      <h2>🚌 九巴／龍運</h2>
-      <div id="kmb">
-        E36A - 2分鐘<br>
-        A41 - 5分鐘<br>
-        E31 - 8分鐘
-      </div>
-    </div>
+    <!-- 九巴 / 龍運 卡片 -->
+<div class="card">
+  <h2>🚌 九巴／龍運</h2>
+  <div class="bus-inputs">
+    <input type="text" id="kmb-route" placeholder="路線 (如: E36A)" value="E36A">
+    <input type="text" id="kmb-stop" placeholder="車站ID (如: 002221)" value="002221">
+    <button onclick="saveAndFetchKmb()">更新</button>
+  </div>
+  <div id="kmb" class="bus-eta-list">載入中...</div>
+</div>
 
-    <div class="card">
-      <h2>⛅ 尖沙咀</h2>
-      <div id="tst">載入中...</div>
-    </div>
-
-    <div class="card">
-      <h2>🚌 城巴</h2>
-      <div id="citybus">
-        A21 - 即將到站<br>
-        970 - 4分鐘<br>
-        930 - 10分鐘
-      </div>
-    </div>
+<!-- 城巴 卡片 -->
+<div class="card">
+  <h2>🚌 城巴</h2>
+  <div class="bus-inputs">
+    <input type="text" id="citybus-route" placeholder="路線 (如: A21)" value="A21">
+    <input type="text" id="citybus-stop" placeholder="車站ID (如: 001000)" value="001000">
+    <button onclick="saveAndFetchCitybus()">更新</button>
+  </div>
+  <div id="citybus" class="bus-eta-list">載入中...</div>
+</div>
 
     <div class="card">
       <h2>📢 教育局消息</h2>
