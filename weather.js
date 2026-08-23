@@ -33,7 +33,7 @@ async function fetchWeatherData() {
       tungChungElem.innerText = "暫無數據";
     }
 
-    // 5. 更新尖沙咀 UI
+    // 5. 更新京士柏 UI
     const tstElem = document.getElementById("tst");
     if (tst && tstElem) {
       tstElem.innerHTML = `
