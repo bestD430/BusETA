@@ -2,115 +2,120 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bus ETA Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>交通 Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="dashboard-container">
+    <!-- 頂部時鐘 Header -->
+    <div class="header">
+      <div id="warning-icon"></div>
+      <div id="date">----年--月--日 (星期-)</div>
+      <div id="ampm">--</div>
+      <div id="clock">00:00:00</div>
+    </div>
 
-  <!-- 頂部時間與警告標示區 -->
-  <div class="header">
-    <div id="warning-icon"></div>
-    <div id="date"></div>
-    <div id="ampm"></div>
-    <div id="clock"></div>
+    <!-- 底部資訊網格 Grid -->
+    <div class="grid">
+      
+      <!-- 九巴 / 龍運 卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🚌 九巴／龍運</h2>
+          <button class="settings-btn" onclick="toggleSettings('kmb-settings')">⚙️ 設定</button>
+        </div>
+
+        <!-- 隱藏的設定區域 -->
+        <div id="kmb-settings" class="settings-panel hidden">
+          <div class="bus-inputs-group">
+            <div class="bus-row">
+              <input type="text" id="kmb-route-1" placeholder="路線 1" value="E31">
+              <input type="text" id="kmb-stop-1" placeholder="站名 1" value="雍逸樓">
+              <select id="kmb-dir-1">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <div class="bus-row">
+              <input type="text" id="kmb-route-2" placeholder="路線 2" value="E36A">
+              <input type="text" id="kmb-stop-2" placeholder="站名 2" value="雍逸東">
+              <select id="kmb-dir-2">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <div class="bus-row">
+              <input type="text" id="kmb-route-3" placeholder="路線 3" value="N31">
+              <input type="text" id="kmb-stop-3" placeholder="站名 3" value="雍逸樓">
+              <select id="kmb-dir-3">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <button onclick="saveAndFetchKmb()">儲存並更新</button>
+          </div>
+        </div>
+
+        <!-- 到站時間列表 -->
+        <div id="kmb" class="bus-eta-list">載入中...</div>
+      </div>
+
+      <!-- 城巴 卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🚌 城巴</h2>
+          <button class="settings-btn" onclick="toggleSettings('citybus-settings')">⚙️ 設定</button>
+        </div>
+
+        <!-- 隱藏的設定區域 -->
+        <div id="citybus-settings" class="settings-panel hidden">
+          <div class="bus-inputs-group">
+            <div class="bus-row">
+              <input type="text" id="citybus-route-1" placeholder="路線 1" value="E21A">
+              <input type="text" id="citybus-stop-1" placeholder="站名 1" value="雍逸樓">
+              <select id="citybus-dir-1">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <div class="bus-row">
+              <input type="text" id="citybus-route-2" placeholder="路線 2" value="E21B">
+              <input type="text" id="citybus-stop-2" placeholder="站名 2" value="雍逸樓">
+              <select id="citybus-dir-2">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <div class="bus-row">
+              <input type="text" id="citybus-route-3" placeholder="路線 3" value="S52">
+              <input type="text" id="citybus-stop-3" placeholder="站名 3" value="逸東邨總站">
+              <select id="citybus-dir-3">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <button onclick="saveAndFetchCitybus()">儲存並更新</button>
+          </div>
+        </div>
+
+        <!-- 到站時間列表 -->
+        <div id="citybus" class="bus-eta-list">載入中...</div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- 卡片網格區 -->
-  <div class="grid">
-
-    <!-- 東涌天氣 -->
-    <div class="card">
-      <h2>🌤 東涌</h2>
-      <div id="tungchung">載入中...</div>
-    </div>
-
-    <!-- 九巴 / 龍運 卡片 -->
-<div class="card">
-  <h2>🚌 九巴／龍運</h2>
-  <div class="bus-inputs-group">
-    <div class="bus-row">
-      <input type="text" id="kmb-route-1" placeholder="路線 1" value="E31">
-      <input type="text" id="kmb-stop-1" placeholder="站名 1" value="雍逸樓">
-      <select id="kmb-dir-1">
-        <option value="outbound">去程</option>
-        <option value="inbound">回程</option>
-      </select>
-    </div>
-    <div class="bus-row">
-      <input type="text" id="kmb-route-2" placeholder="路線 2" value="E36A">
-      <input type="text" id="kmb-stop-2" placeholder="站名 2" value="雍逸東">
-      <select id="kmb-dir-2">
-        <option value="outbound">去程</option>
-        <option value="inbound">回程</option>
-      </select>
-    </div>
-    <div class="bus-row">
-      <input type="text" id="kmb-route-3" placeholder="路線 3" value="N31">
-      <input type="text" id="kmb-stop-3" placeholder="站名 3" value="雍逸樓">
-      <select id="kmb-dir-3">
-        <option value="outbound">去程</option>
-        <option value="inbound">回程</option>
-      </select>
-    </div>
-    <button onclick="saveAndFetchKmb()">更新九巴</button>
-  </div>
-  <div id="kmb" class="bus-eta-list">載入中...</div>
-</div>
-
-<!-- 城巴 卡片 -->
-<div class="card">
-  <h2>🚌 城巴</h2>
-  <div class="bus-inputs-group">
-    <div class="bus-row">
-      <input type="text" id="citybus-route-1" placeholder="路線 1" value="E21A">
-      <input type="text" id="citybus-stop-1" placeholder="站名 1" value="雍逸樓">
-      <select id="citybus-dir-1">
-        <option value="outbound">去程</option>
-        <option value="inbound">回程</option>
-      </select>
-    </div>
-    <div class="bus-row">
-      <input type="text" id="citybus-route-2" placeholder="路線 2" value="E21B">
-      <input type="text" id="citybus-stop-2" placeholder="站名 2" value="雍逸樓">
-      <select id="citybus-dir-2">
-        <option value="outbound">去程</option>
-        <option value="inbound">回程</option>
-      </select>
-    </div>
-    <div class="bus-row">
-      <input type="text" id="citybus-route-3" placeholder="路線 3" value="S52">
-      <input type="text" id="citybus-stop-3" placeholder="站名 3" value="逸東邨總站">
-      <select id="citybus-dir-3">
-        <option value="outbound">去程</option>
-        <option value="inbound">回程</option>
-      </select>
-    </div>
-    <button onclick="saveAndFetchCitybus()">更新城巴</button>
-  </div>
-  <div id="citybus" class="bus-eta-list">載入中...</div>
-</div>
-
-
-    <!-- 教育局消息 -->
-    <div class="card">
-      <h2>📢 教育局消息</h2>
-      <div id="edb-msg">今天沒有特別公布</div>
-    </div>
-
-    <!-- 天文台警告 -->
-    <div class="card">
-      <h2>⚠️ 天文台警告</h2>
-      <div id="warning-msg">載入中...</div>
-    </div>
-
-  </div>
-
-  <!-- 引入 JS 檔案 -->
-  <script src="clock.js"></script>
-  <script src="weather.js"></script>
+  <script>
+    // 切換設定區域顯示/隱藏
+    function toggleSettings(panelId) {
+      const panel = document.getElementById(panelId);
+      if (panel) {
+        panel.classList.toggle('hidden');
+      }
+    }
+  </script>
   <script src="kmb.js"></script>
   <script src="citybus.js"></script>
-  <script src="warning.js"></script>
 </body>
 </html>
