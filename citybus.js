@@ -95,11 +95,13 @@ async function fetchAllCitybusETA() {
             .filter(item => item.dir === dirCode && item.eta)
             .slice(0, 2);
 
+        const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/c/c3/Citybus_Logo.svg";
+
         fullHtml += `<div class="route-group">`;
-        // 大字體路線標頭
         fullHtml += `
             <div class="route-header">
-                <span class="route-no">🚌 ${conf.route}</span>
+                <img src="${logoUrl}" alt="logo" class="company-logo">
+                <span class="route-no">${conf.route}</span>
                 <span class="route-stop">(${conf.stopName})</span>
             </div>
         `;
@@ -118,7 +120,6 @@ async function fetchAllCitybusETA() {
                 const destText = item.dest_tc ? `往 ${item.dest_tc}` : "";
 
                 if (index === 0) {
-                    // 首班到站時間 (大字體高亮區塊)
                     fullHtml += `
                         <div class="first-eta-item">
                             <span class="first-eta-dest">${destText}</span>
@@ -126,7 +127,6 @@ async function fetchAllCitybusETA() {
                         </div>
                     `;
                 } else {
-                    // 下一班車 (小字體)
                     fullHtml += `
                         <div class="next-eta-item">
                             <span>下班車：${destText}</span>
