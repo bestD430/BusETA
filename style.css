@@ -206,12 +206,20 @@ html, body {
   margin-bottom: 0;
 }
 
-/* 路線大字體樣式 */
+/* 路線標頭與大號字體樣式 */
 .route-header {
   display: flex;
-  align-items: baseline;
+  align-items: center; /* 垂直置中文字與 Logo */
   gap: 8px;
   margin-bottom: 6px;
+}
+
+/* 巴士公司 Logo 樣式 */
+.company-logo {
+  height: 22px;
+  width: auto;
+  vertical-align: middle;
+  object-fit: contain;
 }
 
 .route-no {
