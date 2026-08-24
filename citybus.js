@@ -100,10 +100,9 @@ async function fetchAllCitybusETA() {
             .filter(item => item.dir === dirCode && item.eta)
             .slice(0, 2); // 每條路線顯示最新 2 班
 
-        const dirText = conf.dir === "outbound" ? "去程" : "回程";
-
         fullHtml += `<div class="route-group">`;
-        fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} [${dirText}] (${conf.stopName})</div>`;
+        // 已移除去程/回程字樣，僅保留路線與站名
+        fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} (${conf.stopName})</div>`;
 
         if (etaList.length === 0) {
             fullHtml += `<div style="font-size: 12px; color: #888;">暫無到站班次</div>`;
