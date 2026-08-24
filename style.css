@@ -1,3 +1,6 @@
+/* =====================================
+   全局樣式 (Global Styles)
+   ===================================== */
 body {
   background-color: #000000;
   color: #ffffff;
@@ -5,7 +8,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* 頂部時鐘面板 */
+/* =====================================
+   頂部時鐘面板 (Header Panel)
+   ===================================== */
 .header {
   background-color: #d9d9d9;
   color: #000000;
@@ -36,12 +41,21 @@ body {
   letter-spacing: 2px;
 }
 
-/* 網格與卡片 */
+/* =====================================
+   網格與卡片 (Grid & Cards Layout)
+   ===================================== */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding: 16px;
+}
+
+/* 針對手持裝置/小螢幕適應 */
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
@@ -56,6 +70,10 @@ body {
   font-weight: 700;
 }
 
+/* =====================================
+   巴士輸入組樣式 (單路線 & 多路線)
+   ===================================== */
+/* 單一輸入列 */
 .bus-inputs {
   display: flex;
   gap: 6px;
@@ -72,7 +90,8 @@ body {
   width: 45%;
 }
 
-.bus-inputs button {
+.bus-inputs button,
+.bus-inputs-group button {
   background: #0a84ff;
   border: none;
   color: white;
@@ -81,13 +100,76 @@ body {
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
+  margin-top: 4px;
 }
 
-.bus-inputs button:active {
+.bus-inputs button:active,
+.bus-inputs-group button:active {
   opacity: 0.7;
 }
 
+/* 多路線輸入分組 */
+.bus-inputs-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.bus-row {
+  display: flex;
+  gap: 6px;
+}
+
+.bus-row input {
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  flex: 1;
+  width: 50%;
+}
+
+/* =====================================
+   巴士 ETA 到站時間清單樣式
+   ===================================== */
 .bus-eta-list {
   font-size: 16px;
   line-height: 1.6;
+}
+
+.route-group {
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #3a3a3c;
+  padding-bottom: 6px;
+}
+
+.route-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.eta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+/* ETA 到站時間動態顏色標示 */
+.eta-green {
+  color: #30d158;
+  font-weight: bold;
+}
+
+.eta-orange {
+  color: #ff9f0a;
+  font-weight: bold;
+}
+
+.eta-red {
+  color: #ff453a;
+  font-weight: bold;
 }
