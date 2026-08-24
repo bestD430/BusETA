@@ -8,13 +8,13 @@
 html, body {
   width: 100%;
   height: 100%;
-  overflow: hidden; /* 避免外層出現滾動條 */
+  overflow: hidden;
   background-color: #000000;
   color: #ffffff;
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-  -webkit-user-select: none; /* 適合觸控螢幕 */
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -34,7 +34,7 @@ html, body {
   color: #000000;
   text-align: center;
   padding: 12px 10px;
-  flex-shrink: 0; /* 固定高度不被壓縮 */
+  flex-shrink: 0;
 }
 
 #warning-icon {
@@ -66,11 +66,11 @@ html, body {
    ===================================== */
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 橫向雙欄 layout */
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 12px;
   flex: 1;
-  overflow-y: auto; /* 內容超出時內部滾動 */
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -82,37 +82,57 @@ html, body {
   flex-direction: column;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .card h2 {
-  margin: 0 0 8px 0;
+  margin: 0;
   font-size: 18px;
   font-weight: 700;
   color: #ffffff;
 }
 
-/* =====================================
-   巴士輸入組樣式 (單路線 & 多路線)
-   ===================================== */
-.bus-inputs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.bus-inputs input {
+/* 設定按鈕樣式 */
+.settings-btn {
   background: #2c2c2e;
   border: 1px solid #3a3a3c;
-  color: #fff;
+  color: #0a84ff;
   border-radius: 8px;
-  padding: 6px 8px;
-  font-size: 13px;
-  width: 45%;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
+.settings-btn:active {
+  opacity: 0.6;
+}
+
+/* 隱藏/展開控制面板 */
+.settings-panel {
+  transition: all 0.3s ease-in-out;
+  margin-bottom: 10px;
+  background: #242426;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #3a3a3c;
+}
+
+.settings-panel.hidden {
+  display: none;
+}
+
+/* =====================================
+   巴士輸入組樣式
+   ===================================== */
 .bus-inputs-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 10px;
 }
 
 /* 單行路線設定 (路線 + 站名 + 方向選單) */
@@ -123,7 +143,7 @@ html, body {
 }
 
 .bus-row input {
-  background: #2c2c2e;
+  background: #1c1c1e;
   border: 1px solid #3a3a3c;
   color: #fff;
   border-radius: 8px;
@@ -135,7 +155,7 @@ html, body {
 
 /* 行車方向下拉選單 (<select>) */
 .bus-row select {
-  background: #2c2c2e;
+  background: #1c1c1e;
   border: 1px solid #3a3a3c;
   color: #fff;
   border-radius: 8px;
@@ -151,21 +171,19 @@ html, body {
 }
 
 /* 按鈕樣式 */
-.bus-inputs button,
 .bus-inputs-group button {
   background: #0a84ff;
   border: none;
   color: white;
   border-radius: 8px;
-  padding: 7px 12px;
+  padding: 8px 12px;
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 2px;
+  margin-top: 4px;
   transition: opacity 0.2s ease;
 }
 
-.bus-inputs button:active,
 .bus-inputs-group button:active {
   opacity: 0.7;
 }
@@ -212,30 +230,4 @@ html, body {
 .eta-red {
   color: #ff453a;
   font-weight: bold;
-}
-
-/* =====================================
-   針對 iPad Mini 2 (4:3 橫屏 1024x768) Media Query 調整
-   ===================================== */
-@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  .header {
-    padding: 10px 8px;
-  }
-  
-  #clock {
-    font-size: 54px;
-  }
-  
-  #ampm {
-    font-size: 34px;
-  }
-  
-  .grid {
-    gap: 10px;
-    padding: 10px;
-  }
-  
-  .card {
-    padding: 12px;
-  }
 }
