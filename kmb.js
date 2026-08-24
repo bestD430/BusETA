@@ -1,97 +1,88 @@
-// =========================
-// KMB ETA Widget
-// 支援：站名 或 KMB Stop ID
-// =========================
-
 let kmbRoute =
     localStorage.getItem("kmb_route") || "E36A";
 
-let kmbStopInput =
-    localStorage.getItem("kmb_stop") || "TC413";
+let kmbStopName =
+    localStorage.getItem("kmb_stop_name") || "東涌纜車站";
 
-// 初始化
 document.addEventListener("DOMContentLoaded", () => {
 
-    const routeInput =
-        document.getElementById("kmb-route");
+    document.getElementById("kmb-route").value =
+        kmbRoute;
 
-    const stopInput =
-        document.getElementById("kmb-stop");
-
-    if (routeInput)
-        routeInput.value = kmbRoute;
-
-    if (stopInput)
-        stopInput.value = kmbStopInput;
+    document.getElementById("kmb-stop-name").value =
+        kmbStopName;
 
     fetchKmbETA();
 
 });
 
-// 判斷是否 KMB Stop ID
-function isStopCode(value) {
-
-    return /^[A-Z]{2}[0-9]{3}$/i.test(
-        value.trim()
-    );
-
-}
-
-// 站名轉 Stop ID
-async function getStopId(input) {
-
-    // 如果直接輸入 TC413
-    if (isStopCode(input)) {
-        return input.toUpperCase();
-    }
-
-    // 用站名搜尋
-    const response = await fetch(
-        "https://data.etabus.gov.hk/v1/transport/kmb/stop"
-    );
-
-    const data = await response.json();
-
-    const matched = data.data.find(stop =>
-        stop.name_tc &&
-        stop.name_tc.includes(input)
-    );
-
-    return matched ? matched.stop : null;
-}
-
-// 取得 ETA
 async function fetchKmbETA() {
 
     const container =
         document.getElementById("kmb");
 
-    if (!container)
-        return;
-
     container.innerHTML = "搜尋車站中...";
 
     try {
 
-        const stopId =
-            await getStopId(kmbStopInput);
+        const stopRes =
+            await fetch(
+                "https://data.etabus.gov.hk/v1/transport/kmb/stop"
+            );
 
-        if (!stopId) {
+        const stopData =
+            await stopRes.json();
+
+        let targetStop = null;
+
+        const input =
+            kmbStopName.trim();
+
+        // 支援 TC413
+
+        if (/^[A-Z]{2}[0-9]{3}$/i.test(input)) {
+
+            const matched =
+                stopData.data.find(
+                    stop =>
+                        stop.stop.toUpperCase() ===
+                        input.toUpperCase()
+                );
+
+            if (matched) {
+                targetStop = matched.stop;
+            }
+
+        } else {
+
+            const matched =
+                stopData.data.find(
+                    stop =>
+                        stop.name_tc &&
+                        stop.name_tc.includes(input)
+                );
+
+            if (matched) {
+                targetStop = matched.stop;
+            }
+        }
+
+        if (!targetStop) {
 
             container.innerHTML =
                 "❌ 找不到車站";
 
             return;
+
         }
 
-        const response = await fetch(
-
-            `https://data.etabus.gov.hk/v1/transport/kmb/eta/${stopId}/${kmbRoute}/1`
-
-        );
+        const etaRes =
+            await fetch(
+                `https://data.etabus.gov.hk/v1/transport/kmb/eta/${targetStop}/${kmbRoute}/1`
+            );
 
         const etaData =
-            await response.json();
+            await etaRes.json();
 
         if (
             !etaData.data ||
@@ -104,73 +95,55 @@ async function fetchKmbETA() {
             return;
         }
 
-        const etaList =
+        const etas =
             etaData.data
                 .filter(item => item.eta)
                 .slice(0, 3);
 
-        if (etaList.length === 0) {
+        if (etas.length === 0) {
 
             container.innerHTML =
-                "暫無 ETA 資料";
+                "暫無 ETA";
 
             return;
+
         }
 
         let html = "";
 
-        etaList.forEach((item, index) => {
+        etas.forEach(item => {
 
-            const diffMinutes = Math.round(
-
+            const mins = Math.round(
                 (new Date(item.eta) - new Date()) /
                 60000
-
             );
 
-            let etaText = "";
+            let etaText;
 
-            if (diffMinutes <= 0) {
+            if (mins <= 0) {
 
                 etaText = "即將到站";
 
             } else {
 
                 etaText =
-                    `${diffMinutes} 分鐘`;
-
-            }
-
-            let colorClass = "eta-green";
-
-            if (diffMinutes <= 2) {
-
-                colorClass = "eta-red";
-
-            } else if (diffMinutes <= 5) {
-
-                colorClass = "eta-orange";
+                    `${mins} 分鐘`;
 
             }
 
             html += `
-
                 <div class="eta-item">
 
-                    <div class="route">
+                    <span class="route">
                         ${item.route}
-                    </div>
+                    </span>
 
-                    <div class="${colorClass}">
-
+                    <span class="eta">
                         ${etaText}
-
-                    </div>
+                    </span>
 
                 </div>
-
             `;
-
         });
 
         container.innerHTML = html;
@@ -186,7 +159,6 @@ async function fetchKmbETA() {
     }
 }
 
-// 按下更新
 function saveAndFetchKmb() {
 
     kmbRoute =
@@ -196,9 +168,9 @@ function saveAndFetchKmb() {
             .trim()
             .toUpperCase();
 
-    kmbStopInput =
+    kmbStopName =
         document
-            .getElementById("kmb-stop")
+            .getElementById("kmb-stop-name")
             .value
             .trim();
 
@@ -208,15 +180,13 @@ function saveAndFetchKmb() {
     );
 
     localStorage.setItem(
-        "kmb_stop",
-        kmbStopInput
+        "kmb_stop_name",
+        kmbStopName
     );
 
     fetchKmbETA();
-
 }
 
-// 每30秒更新
 setInterval(
     fetchKmbETA,
     30000
