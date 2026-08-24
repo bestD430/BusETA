@@ -19,39 +19,44 @@
   <!-- 卡片網格區 -->
   <div class="grid">
 
+    <!-- 東涌天氣 -->
     <div class="card">
       <h2>🌤 東涌</h2>
       <div id="tungchung">載入中...</div>
     </div>
 
- <!-- 九巴 / 龍運 卡片 -->
-<div class="card">
-  <h2>🚌 九巴／龍運</h2>
-  <div class="bus-inputs">
-    <input type="text" id="kmb-route" placeholder="路線 (例: E31)" value="E31">
-    <input type="text" id="kmb-stop-name" placeholder="站名或代號 (東涌纜車站 / TC413)" value="東涌纜車站">
-    <button onclick="saveAndFetchKmb()">更新</button>
-  </div>
-  <div id="kmb"></div>
-<div id="kmb-stop-results"></div>
+    <!-- 九巴 / 龍運 卡片 -->
+    <div class="card">
+      <h2>🚌 九巴／龍運</h2>
+      <div class="bus-inputs">
+        <input type="text" id="kmb-route" placeholder="路線 (例: E31)" value="E31">
+        <input type="text" id="kmb-stop-name" placeholder="站名 (例: 東涌纜車站)" value="東涌纜車站">
+        <button onclick="saveAndFetchKmb()">更新</button>
+      </div>
+      <!-- 下拉選單與搜尋結果提示區 -->
+      <div id="kmb-stop-results"></div>
+      <!-- 到站時間列表區 -->
+      <div id="kmb" class="bus-eta-list">載入中...</div>
+    </div>
 
-<!-- 城巴 卡片 -->
-<div class="card">
-  <h2>🚌 城巴</h2>
-  <div class="bus-inputs">
-    <input type="text" id="citybus-route" placeholder="路線 (例: A21)" value="A21">
-    <input type="text" id="citybus-stop-name" placeholder="站名 (例: 金鐘站)" value="金鐘站">
-    <button onclick="saveAndFetchCitybus()">更新</button>
-  </div>
-  <div id="citybus" class="bus-eta-list">載入中...</div>
-</div>
+    <!-- 城巴 卡片 -->
+    <div class="card">
+      <h2>🚌 城巴</h2>
+      <div class="bus-inputs">
+        <input type="text" id="citybus-route" placeholder="路線 (例: A21)" value="A21">
+        <input type="text" id="citybus-stop-name" placeholder="站名 (例: 金鐘站)" value="金鐘站">
+        <button onclick="saveAndFetchCitybus()">更新</button>
+      </div>
+      <div id="citybus" class="bus-eta-list">載入中...</div>
+    </div>
 
-
+    <!-- 教育局消息 -->
     <div class="card">
       <h2>📢 教育局消息</h2>
       <div id="edb-msg">今天沒有特別公布</div>
     </div>
 
+    <!-- 天文台警告 -->
     <div class="card">
       <h2>⚠️ 天文台警告</h2>
       <div id="warning-msg">載入中...</div>
