@@ -1,3 +1,5 @@
+console.log("kmb.js 已載入");
+
 document.getElementById("kmb").innerHTML = `
 <div>
 E36A - 2分鐘
