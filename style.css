@@ -90,24 +90,6 @@ body {
   width: 45%;
 }
 
-.bus-inputs button,
-.bus-inputs-group button {
-  background: #0a84ff;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 4px;
-}
-
-.bus-inputs button:active,
-.bus-inputs-group button:active {
-  opacity: 0.7;
-}
-
 /* 多路線輸入分組 */
 .bus-inputs-group {
   display: flex;
@@ -116,9 +98,11 @@ body {
   margin-bottom: 12px;
 }
 
+/* 單行路線設定 (路線 + 站名 + 方向選單) */
 .bus-row {
   display: flex;
   gap: 6px;
+  align-items: center;
 }
 
 .bus-row input {
@@ -129,7 +113,44 @@ body {
   padding: 6px 8px;
   font-size: 13px;
   flex: 1;
-  width: 50%;
+  min-width: 0; /* 防止輸入框拉開卡片 */
+}
+
+/* 行車方向下拉選單 (<select>) */
+.bus-row select {
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 4px;
+  font-size: 13px;
+  width: 72px;
+  cursor: pointer;
+  outline: none;
+}
+
+.bus-row select:focus {
+  border-color: #0a84ff;
+}
+
+/* 按鈕樣式 */
+.bus-inputs button,
+.bus-inputs-group button {
+  background: #0a84ff;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.2s ease;
+}
+
+.bus-inputs button:active,
+.bus-inputs-group button:active {
+  opacity: 0.7;
 }
 
 /* =====================================
