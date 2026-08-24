@@ -3,51 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>交通 Dashboard</title>
+  <title>巴士到站時間儀表板</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <div class="dashboard-container">
-    <!-- 頂部時鐘 Header -->
+    <!-- 頂部時鐘面板 -->
     <div class="header">
       <div id="warning-icon"></div>
-      <div id="date">----年--月--日 (星期-)</div>
+      <div id="date">--月--日 週-</div>
       <div id="ampm">--</div>
-      <div id="clock">00:00:00</div>
+      <div id="clock">00:00</div>
     </div>
 
-    <!-- 底部資訊網格 Grid -->
+    <!-- 內容網格卡片 -->
     <div class="grid">
       
       <!-- 九巴 / 龍運 卡片 -->
       <div class="card">
         <div class="card-header">
-          <h2>🚌 九巴／龍運</h2>
+          <h2>九巴 / 龍運</h2>
           <button class="settings-btn" onclick="toggleSettings('kmb-settings')">⚙️ 設定</button>
         </div>
 
-        <!-- 隱藏的設定區域 -->
+        <!-- 九巴設定面板 -->
         <div id="kmb-settings" class="settings-panel hidden">
           <div class="bus-inputs-group">
             <div class="bus-row">
-              <input type="text" id="kmb-route-1" placeholder="路線 1" value="E31">
-              <input type="text" id="kmb-stop-1" placeholder="站名 1" value="雍逸樓">
+              <input type="text" id="kmb-route-1" placeholder="路線 1 (例: E31)">
+              <input type="text" id="kmb-stop-1" placeholder="站名 (例: 雍逸樓)">
               <select id="kmb-dir-1">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
               </select>
             </div>
             <div class="bus-row">
-              <input type="text" id="kmb-route-2" placeholder="路線 2" value="E36A">
-              <input type="text" id="kmb-stop-2" placeholder="站名 2" value="雍逸東">
+              <input type="text" id="kmb-route-2" placeholder="路線 2 (例: E36A)">
+              <input type="text" id="kmb-stop-2" placeholder="站名 (例: 雍逸東)">
               <select id="kmb-dir-2">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
               </select>
             </div>
             <div class="bus-row">
-              <input type="text" id="kmb-route-3" placeholder="路線 3" value="N31">
-              <input type="text" id="kmb-stop-3" placeholder="站名 3" value="雍逸樓">
+              <input type="text" id="kmb-route-3" placeholder="路線 3 (例: N31)">
+              <input type="text" id="kmb-stop-3" placeholder="站名 (例: 雍逸樓)">
               <select id="kmb-dir-3">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -57,39 +58,39 @@
           </div>
         </div>
 
-        <!-- 到站時間列表 -->
-        <div id="kmb" class="bus-eta-list">載入中...</div>
+        <!-- 到站時間列表容器 -->
+        <div id="kmb" class="bus-eta-list"></div>
       </div>
 
       <!-- 城巴 卡片 -->
       <div class="card">
         <div class="card-header">
-          <h2>🚌 城巴</h2>
+          <h2>城巴</h2>
           <button class="settings-btn" onclick="toggleSettings('citybus-settings')">⚙️ 設定</button>
         </div>
 
-        <!-- 隱藏的設定區域 -->
+        <!-- 城巴設定面板 -->
         <div id="citybus-settings" class="settings-panel hidden">
           <div class="bus-inputs-group">
             <div class="bus-row">
-              <input type="text" id="citybus-route-1" placeholder="路線 1" value="E21A">
-              <input type="text" id="citybus-stop-1" placeholder="站名 1" value="雍逸樓">
+              <input type="text" id="citybus-route-1" placeholder="路線 1 (例: E21A)">
+              <input type="text" id="citybus-stop-1" placeholder="站名 (例: 雍逸樓)">
               <select id="citybus-dir-1">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
               </select>
             </div>
             <div class="bus-row">
-              <input type="text" id="citybus-route-2" placeholder="路線 2" value="E21B">
-              <input type="text" id="citybus-stop-2" placeholder="站名 2" value="雍逸樓">
+              <input type="text" id="citybus-route-2" placeholder="路線 2 (例: E21B)">
+              <input type="text" id="citybus-stop-2" placeholder="站名 (例: 雍逸樓)">
               <select id="citybus-dir-2">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
               </select>
             </div>
             <div class="bus-row">
-              <input type="text" id="citybus-route-3" placeholder="路線 3" value="S52">
-              <input type="text" id="citybus-stop-3" placeholder="站名 3" value="逸東邨總站">
+              <input type="text" id="citybus-route-3" placeholder="路線 3 (例: S52)">
+              <input type="text" id="citybus-stop-3" placeholder="站名 (例: 逸東邨總站)">
               <select id="citybus-dir-3">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -99,50 +100,24 @@
           </div>
         </div>
 
-        <!-- 到站時間列表 -->
-        <div id="citybus" class="bus-eta-list">載入中...</div>
+        <!-- 到站時間列表容器 -->
+        <div id="citybus" class="bus-eta-list"></div>
       </div>
 
     </div>
   </div>
 
+  <!-- 展開/隱藏設定面板通用函式 -->
   <script>
-    // 切換設定區域顯示/隱藏
     function toggleSettings(panelId) {
       const panel = document.getElementById(panelId);
       if (panel) {
         panel.classList.toggle('hidden');
       }
     }
-
-    // 即時時鐘邏輯
-    function updateClock() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const date = String(now.getDate()).padStart(2, '0');
-      const days = ['日', '一', '二', '三', '四', '五', '六'];
-      const dayName = days[now.getDay()];
-
-      let hours = now.getHours();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12; // 轉為 12 小時制
-
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-
-      const dateEl = document.getElementById('date');
-      const ampmEl = document.getElementById('ampm');
-      const clockEl = document.getElementById('clock');
-
-      if (dateEl) dateEl.innerText = `${year}年${month}月${date}日 (星期${dayName})`;
-      if (ampmEl) ampmEl.innerText = ampm;
-      if (clockEl) clockEl.innerText = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
-    }
-
-    setInterval(updateClock, 1000);
-    updateClock();
   </script>
+
+  <!-- 載入 JS 檔案 -->
   <script src="kmb.js"></script>
   <script src="citybus.js"></script>
 </body>
