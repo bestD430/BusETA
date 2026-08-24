@@ -1,5 +1,5 @@
 let kmbRoute =
-    localStorage.getItem("kmb_route") || "E36A";
+    localStorage.getItem("kmb_route") || "E31";
 
 let kmbStopName =
     localStorage.getItem("kmb_stop_name") || "東涌纜車站";
