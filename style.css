@@ -199,14 +199,34 @@ html, body {
 }
 
 .route-group {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   border-bottom: 1px dashed #3a3a3c;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
 }
 
 .route-group:last-child {
   border-bottom: none;
   margin-bottom: 0;
+}
+
+/* 路線標頭與大號號碼樣式 */
+.route-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.route-no {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffd60a; /* 醒目的黃色路線號 */
+}
+
+.route-stop {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8e8e93;
 }
 
 .eta-item {
@@ -220,14 +240,17 @@ html, body {
 .eta-green {
   color: #30d158;
   font-weight: bold;
+  font-size: 16px;
 }
 
 .eta-orange {
   color: #ff9f0a;
   font-weight: bold;
+  font-size: 16px;
 }
 
 .eta-red {
   color: #ff453a;
   font-weight: bold;
+  font-size: 16px;
 }
