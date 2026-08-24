@@ -106,11 +106,17 @@ async function fetchAllKmbETA() {
             .filter(item => item.route === conf.route && item.dir === dirCode && item.eta)
             .slice(0, 2);
 
+        // 自動判斷龍運路線 (A/E/NA/S/R/N 開頭之龍運線) 與九巴路線之 Logo
+        const isLwb = /^(E|A|NA|S|R)\d+/i.test(conf.route);
+        const logoUrl = isLwb 
+            ? "https://upload.wikimedia.org/wikipedia/commons/e/e0/Long_Win_Bus_Logo.svg"
+            : "https://upload.wikimedia.org/wikipedia/commons/f/f6/KMB_Logo.svg";
+
         fullHtml += `<div class="route-group">`;
-        // 大字體路線標頭
         fullHtml += `
             <div class="route-header">
-                <span class="route-no">🚌 ${conf.route}</span>
+                <img src="${logoUrl}" alt="logo" class="company-logo">
+                <span class="route-no">${conf.route}</span>
                 <span class="route-stop">(${conf.stopName})</span>
             </div>
         `;
@@ -129,7 +135,6 @@ async function fetchAllKmbETA() {
                 const destText = item.dest_tc ? `往 ${item.dest_tc}` : "";
 
                 if (index === 0) {
-                    // 首班到站時間 (大字體高亮區塊)
                     fullHtml += `
                         <div class="first-eta-item">
                             <span class="first-eta-dest">${destText}</span>
@@ -137,7 +142,6 @@ async function fetchAllKmbETA() {
                         </div>
                     `;
                 } else {
-                    // 下一班車 (小字體)
                     fullHtml += `
                         <div class="next-eta-item">
                             <span>下班車：${destText}</span>
