@@ -3,9 +3,9 @@
 // =====================================
 
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
-    { route: "E31", stopName: "雍逸樓", dir: "outbound", stopId: null },
-    { route: "E36A", stopName: "雍逸東", dir: "outbound", stopId: null },
-    { route: "N31", stopName: "雍逸樓", dir: "outbound", stopId: null }
+    { route: "E31", stopName: "逸東邨雍逸樓", dir: "outbound", stopId: null },
+    { route: "E36A", stopName: "逸東邨雍逸樓", dir: "outbound", stopId: null },
+    { route: "N31", stopName: "逸東邨雍逸樓", dir: "outbound", stopId: null }
 ];
 
 let globalKmbStopsCache = null;
