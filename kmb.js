@@ -1,8 +1,8 @@
 // =====================================
-// KMB ETA Widget (支援行車方向選單)
+// 九巴 / 龍運 ETA Widget (完整版)
 // =====================================
 
-// 預設 3 組九巴路線、站名與方向 (outbound / inbound)
+// 預設 3 組九巴路線、站名與方向 (outbound 去程 / inbound 回程)
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
     { route: "E31", stopName: "雍逸樓", dir: "outbound", stopId: null },
     { route: "E36A", stopName: "雍逸東", dir: "outbound", stopId: null },
@@ -12,7 +12,7 @@ let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
 let globalKmbStopsCache = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 填入儲存的設定值到輸入框與選單
+    // 填入儲存的設定值到輸入框與下拉選單
     for (let i = 0; i < 3; i++) {
         const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`kmb-route-${i + 1}`);
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initAndFetchAllKmb();
 });
 
-// 下載全港車站資料 (帶快取)
+// 下載全港車站資料 (帶記憶體快取，提升搜尋速度)
 async function fetchAllKmbStopsOnce() {
     if (globalKmbStopsCache) return globalKmbStopsCache;
     try {
@@ -45,7 +45,7 @@ async function fetchAllKmbStopsOnce() {
 
 async function initAndFetchAllKmb() {
     const container = document.getElementById("kmb");
-    container.innerHTML = "尋找九巴車站中...";
+    container.innerHTML = "<div style='color:#aaa;'>尋找九巴車站中...</div>";
 
     const stopsMap = await fetchAllKmbStopsOnce();
 
@@ -65,8 +65,7 @@ async function initAndFetchAllKmb() {
 
 async function findKmbStopId(route, keyword, dir, stopsMap) {
     try {
-        // 只抓取指定方向 (outbound 去程 / inbound 回程) 的站單
-        const serviceType = "1";
+        const serviceType = "1"; // 主線
         const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dir}/${serviceType}`);
         if (!res.ok) return null;
         const d = await res.json();
@@ -76,7 +75,7 @@ async function findKmbStopId(route, keyword, dir, stopsMap) {
         for (const item of d.data) {
             const stopName = stopsMap.get(item.stop) || "";
             if (stopName.includes(keyword)) {
-                return item.stop; // 找到第一個匹配該方向的車站 ID
+                return item.stop; // 找到第一個匹配關鍵字與方向的車站 ID
             }
         }
     } catch (e) {
@@ -92,7 +91,7 @@ async function fetchAllKmbETA() {
     const activeConfigs = kmbConfigs.filter(c => c.route && c.stopId);
 
     if (activeConfigs.length === 0) {
-        container.innerHTML = "<div style='color:#aaa;'>請檢查九巴路線與站名</div>";
+        container.innerHTML = "<div style='color:#aaa;'>請點擊「⚙️ 設定」輸入路線與站名</div>";
         return;
     }
 
@@ -110,11 +109,11 @@ async function fetchAllKmbETA() {
         const dirCode = conf.dir === "outbound" ? "O" : "I";
         const etaList = data
             .filter(item => item.route === conf.route && item.dir === dirCode && item.eta)
-            .slice(0, 2);
+            .slice(0, 2); // 每條路線顯示最新 2 班
 
         const dirText = conf.dir === "outbound" ? "去程" : "回程";
 
-        fullHtml += `<div class="route-group" style="margin-bottom: 8px; border-bottom: 1px dashed #3a3a3c; padding-bottom: 6px;">`;
+        fullHtml += `<div class="route-group">`;
         fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} [${dirText}] (${conf.stopName})</div>`;
 
         if (etaList.length === 0) {
@@ -131,7 +130,7 @@ async function fetchAllKmbETA() {
                 const destText = item.dest_tc ? `往 ${item.dest_tc}` : "";
 
                 fullHtml += `
-                    <div class="eta-item" style="display:flex; justify-content:space-between; font-size: 13px; margin-top: 2px;">
+                    <div class="eta-item">
                         <span style="color:#ccc;">${destText}</span>
                         <span class="${colorClass}">${etaText}</span>
                     </div>
@@ -153,9 +152,15 @@ function saveAndFetchKmb() {
         kmbConfigs[i] = { route, stopName, dir, stopId: null };
     }
 
+    // 自動收起設定面板
+    if (typeof toggleSettings === "function") {
+        toggleSettings("kmb-settings");
+    }
+
     initAndFetchAllKmb();
 }
 
+// 每 30 秒自動刷新 ETA
 setInterval(() => {
     fetchAllKmbETA();
 }, 30000);
