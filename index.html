@@ -25,48 +25,72 @@
       <div id="tungchung">載入中...</div>
     </div>
 
-    <!-- 九巴 / 龍運 卡片 (支援 3 條路線) -->
-    <div class="card">
-      <h2>🚌 九巴／龍運</h2>
-      <div class="bus-inputs-group">
-        <div class="bus-row">
-          <input type="text" id="kmb-route-1" placeholder="路線 1 (例: E31)" value="E31">
-          <input type="text" id="kmb-stop-1" placeholder="站名 1 (例: 東涌纜車站)" value="東涌纜車站">
-        </div>
-        <div class="bus-row">
-          <input type="text" id="kmb-route-2" placeholder="路線 2 (例: 37M)" value="37M">
-          <input type="text" id="kmb-stop-2" placeholder="站名 2 (例: 迎東邨)" value="迎東邨">
-        </div>
-        <div class="bus-row">
-          <input type="text" id="kmb-route-3" placeholder="路線 3 (選填)" value="">
-          <input type="text" id="kmb-stop-3" placeholder="站名 3 (選填)" value="">
-        </div>
-        <button onclick="saveAndFetchKmb()">更新九巴</button>
-      </div>
-      <div id="kmb-stop-results"></div>
-      <div id="kmb" class="bus-eta-list">載入中...</div>
+    <!-- 九巴 / 龍運 卡片 -->
+<div class="card">
+  <h2>🚌 九巴／龍運</h2>
+  <div class="bus-inputs-group">
+    <div class="bus-row">
+      <input type="text" id="kmb-route-1" placeholder="路線 1" value="E31">
+      <input type="text" id="kmb-stop-1" placeholder="站名 1" value="雍逸樓">
+      <select id="kmb-dir-1">
+        <option value="outbound">去程</option>
+        <option value="inbound">回程</option>
+      </select>
     </div>
+    <div class="bus-row">
+      <input type="text" id="kmb-route-2" placeholder="路線 2" value="E36A">
+      <input type="text" id="kmb-stop-2" placeholder="站名 2" value="雍逸東">
+      <select id="kmb-dir-2">
+        <option value="outbound">去程</option>
+        <option value="inbound">回程</option>
+      </select>
+    </div>
+    <div class="bus-row">
+      <input type="text" id="kmb-route-3" placeholder="路線 3" value="N31">
+      <input type="text" id="kmb-stop-3" placeholder="站名 3" value="雍逸樓">
+      <select id="kmb-dir-3">
+        <option value="outbound">去程</option>
+        <option value="inbound">回程</option>
+      </select>
+    </div>
+    <button onclick="saveAndFetchKmb()">更新九巴</button>
+  </div>
+  <div id="kmb" class="bus-eta-list">載入中...</div>
+</div>
 
-    <!-- 城巴 卡片 (支援 3 條路線) -->
-    <div class="card">
-      <h2>🚌 城巴</h2>
-      <div class="bus-inputs-group">
-        <div class="bus-row">
-          <input type="text" id="citybus-route-1" placeholder="路線 1 (例: A21)" value="A21">
-          <input type="text" id="citybus-stop-1" placeholder="站名 1 (例: 金鐘站)" value="金鐘站">
-        </div>
-        <div class="bus-row">
-          <input type="text" id="citybus-route-2" placeholder="路線 2 (例: E21)" value="">
-          <input type="text" id="citybus-stop-2" placeholder="站名 2 (例: 東涌纜車站)" value="">
-        </div>
-        <div class="bus-row">
-          <input type="text" id="citybus-route-3" placeholder="路線 3 (選填)" value="">
-          <input type="text" id="citybus-stop-3" placeholder="站名 3 (選填)" value="">
-        </div>
-        <button onclick="saveAndFetchCitybus()">更新城巴</button>
-      </div>
-      <div id="citybus" class="bus-eta-list">載入中...</div>
+<!-- 城巴 卡片 -->
+<div class="card">
+  <h2>🚌 城巴</h2>
+  <div class="bus-inputs-group">
+    <div class="bus-row">
+      <input type="text" id="citybus-route-1" placeholder="路線 1" value="E21A">
+      <input type="text" id="citybus-stop-1" placeholder="站名 1" value="雍逸樓">
+      <select id="citybus-dir-1">
+        <option value="outbound">去程</option>
+        <option value="inbound">回程</option>
+      </select>
     </div>
+    <div class="bus-row">
+      <input type="text" id="citybus-route-2" placeholder="路線 2" value="E21B">
+      <input type="text" id="citybus-stop-2" placeholder="站名 2" value="雍逸樓">
+      <select id="citybus-dir-2">
+        <option value="outbound">去程</option>
+        <option value="inbound">回程</option>
+      </select>
+    </div>
+    <div class="bus-row">
+      <input type="text" id="citybus-route-3" placeholder="路線 3" value="S52">
+      <input type="text" id="citybus-stop-3" placeholder="站名 3" value="逸東邨總站">
+      <select id="citybus-dir-3">
+        <option value="outbound">去程</option>
+        <option value="inbound">回程</option>
+      </select>
+    </div>
+    <button onclick="saveAndFetchCitybus()">更新城巴</button>
+  </div>
+  <div id="citybus" class="bus-eta-list">載入中...</div>
+</div>
+
 
     <!-- 教育局消息 -->
     <div class="card">
