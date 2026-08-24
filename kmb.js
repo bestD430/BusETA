@@ -1,59 +1,59 @@
 // =====================================
-// KMB ETA Widget (效能修復版)
+// KMB ETA Widget (支援行車方向選單)
 // =====================================
 
-// 預設 3 組路線與站名設定
+// 預設 3 組九巴路線、站名與方向 (outbound / inbound)
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
-    { route: "E31", stopName: "雍逸樓", stopId: null },
-    { route: "E36A", stopName: "雍逸東", stopId: null },
-    { route: "N31", stopName: "雍逸樓", stopId: null }
+    { route: "E31", stopName: "雍逸樓", dir: "outbound", stopId: null },
+    { route: "E36A", stopName: "雍逸東", dir: "outbound", stopId: null },
+    { route: "N31", stopName: "雍逸樓", dir: "outbound", stopId: null }
 ];
 
-let globalStopsCache = null; // 全域快取所有車站數據
+let globalKmbStopsCache = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 填入儲存的設定值到輸入框
+    // 填入儲存的設定值到輸入框與選單
     for (let i = 0; i < 3; i++) {
-        const conf = kmbConfigs[i] || { route: "", stopName: "" };
+        const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`kmb-route-${i + 1}`);
         const stopEl = document.getElementById(`kmb-stop-${i + 1}`);
+        const dirEl = document.getElementById(`kmb-dir-${i + 1}`);
+
         if (routeEl) routeEl.value = conf.route;
         if (stopEl) stopEl.value = conf.stopName;
+        if (dirEl) dirEl.value = conf.dir || "outbound";
     }
 
-    initAndFetchAll();
+    initAndFetchAllKmb();
 });
 
-// 取得全港所有九巴車站資料 (帶快取機制)
-async function fetchAllStopsOnce() {
-    if (globalStopsCache) return globalStopsCache;
+// 下載全港車站資料 (帶快取)
+async function fetchAllKmbStopsOnce() {
+    if (globalKmbStopsCache) return globalKmbStopsCache;
     try {
         const res = await fetch("https://data.etabus.gov.hk/v1/transport/kmb/stop");
         const data = await res.json();
         if (data && data.data) {
-            // 建立以 stop ID 為 key 的 Map 方便快速比對
-            globalStopsCache = new Map(data.data.map(s => [s.stop, s.name_tc]));
-            return globalStopsCache;
+            globalKmbStopsCache = new Map(data.data.map(s => [s.stop, s.name_tc]));
+            return globalKmbStopsCache;
         }
     } catch (e) {
-        console.error("下載全港車站清單失敗:", e);
+        console.error("下載九巴車站資料失敗:", e);
     }
     return new Map();
 }
 
-// 初始化車站 ID 並抓取 ETA
-async function initAndFetchAll() {
+async function initAndFetchAllKmb() {
     const container = document.getElementById("kmb");
-    container.innerHTML = "尋找車站中...";
+    container.innerHTML = "尋找九巴車站中...";
 
-    // 1. 先下載一次車站清單
-    const stopsMap = await fetchAllStopsOnce();
+    const stopsMap = await fetchAllKmbStopsOnce();
 
-    // 2. 為每條設定尋找匹配的 Stop ID
+    // 依據路線、站名與方向尋找對應 Stop ID
     for (let i = 0; i < kmbConfigs.length; i++) {
         const conf = kmbConfigs[i];
         if (conf.route && conf.stopName) {
-            conf.stopId = await findStopId(conf.route, conf.stopName, stopsMap);
+            conf.stopId = await findKmbStopId(conf.route, conf.stopName, conf.dir, stopsMap);
         } else {
             conf.stopId = null;
         }
@@ -63,39 +63,28 @@ async function initAndFetchAll() {
     fetchAllKmbETA();
 }
 
-// 根據路線與關鍵字尋找匹配的 Stop ID (零網路延遲比對)
-async function findStopId(route, keyword, stopsMap) {
+async function findKmbStopId(route, keyword, dir, stopsMap) {
     try {
-        // 抓取該路線的去程與回程站單
-        const [outRes, inRes] = await Promise.all([
-            fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/outbound/1`).catch(() => null),
-            fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/inbound/1`).catch(() => null)
-        ]);
+        // 只抓取指定方向 (outbound 去程 / inbound 回程) 的站單
+        const serviceType = "1";
+        const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dir}/${serviceType}`);
+        if (!res.ok) return null;
+        const d = await res.json();
+        
+        if (!d.data || d.data.length === 0) return null;
 
-        let routeStops = [];
-        if (outRes && outRes.ok) {
-            const d = await outRes.json();
-            if (d.data) routeStops.push(...d.data);
-        }
-        if (inRes && inRes.ok) {
-            const d = await inRes.json();
-            if (d.data) routeStops.push(...d.data);
-        }
-
-        // 本地比對站名
-        for (const item of routeStops) {
+        for (const item of d.data) {
             const stopName = stopsMap.get(item.stop) || "";
             if (stopName.includes(keyword)) {
-                return item.stop; // 找到第一個名稱匹配的車站
+                return item.stop; // 找到第一個匹配該方向的車站 ID
             }
         }
     } catch (e) {
-        console.error(`尋找路線 ${route} 車站失敗:`, e);
+        console.error(`尋找九巴 ${route} (${dir}) 車站失敗:`, e);
     }
     return null;
 }
 
-// 同時查詢並顯示所有設定路線的 ETA
 async function fetchAllKmbETA() {
     const container = document.getElementById("kmb");
     let fullHtml = "";
@@ -103,11 +92,10 @@ async function fetchAllKmbETA() {
     const activeConfigs = kmbConfigs.filter(c => c.route && c.stopId);
 
     if (activeConfigs.length === 0) {
-        container.innerHTML = "<div style='color:#aaa;'>請檢查路線與站名是否正確</div>";
+        container.innerHTML = "<div style='color:#aaa;'>請檢查九巴路線與站名</div>";
         return;
     }
 
-    // 並行抓取所有已匹配 Stop ID 的 ETA
     const promises = activeConfigs.map(conf =>
         fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${conf.stopId}`)
             .then(res => res.json())
@@ -118,12 +106,16 @@ async function fetchAllKmbETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, data }) => {
+        // 篩選對應路線與方向 (dir = outbound -> O / inbound -> I)
+        const dirCode = conf.dir === "outbound" ? "O" : "I";
         const etaList = data
-            .filter(item => item.route === conf.route && item.eta)
-            .slice(0, 2); // 每條路線顯示最新 2 班
+            .filter(item => item.route === conf.route && item.dir === dirCode && item.eta)
+            .slice(0, 2);
+
+        const dirText = conf.dir === "outbound" ? "去程" : "回程";
 
         fullHtml += `<div class="route-group" style="margin-bottom: 8px; border-bottom: 1px dashed #3a3a3c; padding-bottom: 6px;">`;
-        fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} (${conf.stopName})</div>`;
+        fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} [${dirText}] (${conf.stopName})</div>`;
 
         if (etaList.length === 0) {
             fullHtml += `<div style="font-size: 12px; color: #888;">暫無到站班次</div>`;
@@ -152,19 +144,18 @@ async function fetchAllKmbETA() {
     container.innerHTML = fullHtml;
 }
 
-// 按鈕更新事件 (重新讀取輸入框)
 function saveAndFetchKmb() {
     for (let i = 0; i < 3; i++) {
         const route = document.getElementById(`kmb-route-${i + 1}`).value.trim().toUpperCase();
         const stopName = document.getElementById(`kmb-stop-${i + 1}`).value.trim();
+        const dir = document.getElementById(`kmb-dir-${i + 1}`).value;
 
-        kmbConfigs[i] = { route, stopName, stopId: null };
+        kmbConfigs[i] = { route, stopName, dir, stopId: null };
     }
 
-    initAndFetchAll();
+    initAndFetchAllKmb();
 }
 
-// 每 30 秒自動刷新 ETA
 setInterval(() => {
     fetchAllKmbETA();
 }, 30000);
