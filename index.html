@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>巴士到站時間儀表板</title>
-  <!-- 加上 ?v=3 強迫瀏覽器更新快取 -->
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -16,14 +15,13 @@
       <div id="date">--月--日 週-</div>
       <div id="ampm">--</div>
       <div id="clock">00:00</div>
-      <!-- 調整天氣預告字體為小字 (12px, normal) -->
       <div id="weather-info" style="font-size: 12px; margin-top: 4px; color: #555; font-weight: normal;">載入天氣中...</div>
     </div>
 
-    <!-- 內容網格卡片 -->
+    <!-- 內容網格卡片 (適應三卡片佈局) -->
     <div class="grid">
       
-      <!-- 九巴 / 龍運 卡片 -->
+      <!-- 1. 九巴 / 龍運 卡片 -->
       <div class="card">
         <div class="card-header">
           <h2>九巴 / 龍運</h2>
@@ -63,7 +61,7 @@
         <div id="kmb" class="bus-eta-list"></div>
       </div>
 
-      <!-- 城巴 卡片 -->
+      <!-- 2. 城巴 卡片 -->
       <div class="card">
         <div class="card-header">
           <h2>城巴</h2>
@@ -103,6 +101,46 @@
         <div id="citybus" class="bus-eta-list"></div>
       </div>
 
+      <!-- 3. 港鐵巴士 卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>港鐵巴士</h2>
+          <button class="settings-btn" onclick="toggleSettings('mtrbus-settings')">⚙️ 設定</button>
+        </div>
+
+        <div id="mtrbus-settings" class="settings-panel hidden">
+          <div class="bus-inputs-group">
+            <div class="bus-row">
+              <input type="text" id="mtrbus-route-1" placeholder="路線 1 (例: K76)">
+              <input type="text" id="mtrbus-stop-1" placeholder="站名 (例: 天恒邨)">
+              <select id="mtrbus-dir-1">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <div class="bus-row">
+              <input type="text" id="mtrbus-route-2" placeholder="路線 2 (例: 506)">
+              <input type="text" id="mtrbus-stop-2" placeholder="站名 (例: 屯門站)">
+              <select id="mtrbus-dir-2">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <div class="bus-row">
+              <input type="text" id="mtrbus-route-3" placeholder="路線 3 (例: K52)">
+              <input type="text" id="mtrbus-stop-3" placeholder="站名 (例: 屯門站)">
+              <select id="mtrbus-dir-3">
+                <option value="outbound">去程</option>
+                <option value="inbound">回程</option>
+              </select>
+            </div>
+            <button onclick="saveAndFetchMtrbus()">儲存並更新</button>
+          </div>
+        </div>
+
+        <div id="mtrbus" class="bus-eta-list"></div>
+      </div>
+
     </div>
   </div>
 
@@ -115,7 +153,6 @@
       }
     }
 
-    // 1. 即時時鐘
     function updateClock() {
       const now = new Date();
       const month = now.getMonth() + 1;
@@ -136,19 +173,15 @@
       document.getElementById('clock').textContent = `${hoursStr}:${minutes}`;
     }
 
-    // 2. 香港天文台天氣與警告資訊
     async function fetchWeather() {
       try {
         const res = await fetch("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc");
         const data = await res.json();
         
-        // 氣溫與濕度
         const temp = data.temperature?.data[0]?.value || "--";
         const humidity = data.humidity?.data[0]?.value || "--";
-        
         let weatherText = `🌡️ ${temp}°C  💧 ${humidity}%`;
         
-        // 天氣警告圖示處理
         const warningEl = document.getElementById("warning-icon");
         if (data.warningMessage && data.warningMessage.length > 0) {
           warningEl.textContent = "⚠️ " + data.warningMessage[0];
@@ -168,12 +201,13 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    setInterval(fetchWeather, 600000); // 每 10 分鐘更新一次天氣
+    setInterval(fetchWeather, 600000);
     fetchWeather();
   </script>
 
-  <!-- 載入帶版本號的 JS 檔 -->
-  <script src="kmb.js?v=3"></script>
-  <script src="citybus.js?v=3"></script>
+  <!-- 載入 JS 檔案 -->
+  <script src="kmb.js?v=4"></script>
+  <script src="citybus.js?v=4"></script>
+  <script src="mtrbus.js?v=4"></script>
 </body>
 </html>
