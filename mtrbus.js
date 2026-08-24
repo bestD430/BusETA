@@ -1,5 +1,5 @@
 // =====================================
-// 港鐵巴士 ETA Widget (完整版)
+// 港鐵巴士 ETA Widget (增強穩定版)
 // =====================================
 
 let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
@@ -28,7 +28,7 @@ async function fetchAllMtrbusETA() {
     if (!container) return;
 
     let fullHtml = "";
-    const activeConfigs = mtrbusConfigs.filter(c => c.route);
+    const activeConfigs = mtrbusConfigs.filter(c => c.route && c.route.trim() !== "");
 
     if (activeConfigs.length === 0) {
         container.innerHTML = "<div style='color:#aaa;'>請點擊「⚙️ 設定」輸入路線與站名</div>";
@@ -41,11 +41,17 @@ async function fetchAllMtrbusETA() {
         fetch("https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ routeName: conf.route, language: "zh" })
+            body: JSON.stringify({
+                routeName: conf.route.trim().toUpperCase(),
+                language: "zh"
+            })
         })
         .then(res => res.json())
         .then(data => ({ conf, data }))
-        .catch(() => ({ conf, data: null }))
+        .catch(err => {
+            console.error(`港鐵巴士 ${conf.route} 載入失敗:`, err);
+            return { conf, data: null };
+        })
     );
 
     const results = await Promise.all(promises);
@@ -62,22 +68,46 @@ async function fetchAllMtrbusETA() {
 
         let etaList = [];
 
-        if (data && data.status === "1" && data.busStop) {
-            // 若有指定站名，過濾該站；若無指定則讀取第一個車站
+        if (data && data.status === "1" && data.busStop && data.busStop.length > 0) {
             let targetStops = data.busStop;
-            if (conf.stopName) {
-                const matched = data.busStop.filter(s => s.busStopTitleName && s.busStopTitleName.includes(conf.stopName));
-                if (matched.length > 0) targetStops = matched;
+
+            // 1. 若有輸入站名，嘗試搜尋包含關鍵字的車站
+            if (conf.stopName && conf.stopName.trim() !== "") {
+                const keyword = conf.stopName.trim();
+                const matched = data.busStop.filter(s => {
+                    const name1 = s.busStopTitleName || "";
+                    const name2 = s.busStopName || "";
+                    return name1.includes(keyword) || name2.includes(keyword);
+                });
+                if (matched.length > 0) {
+                    targetStops = matched;
+                }
             }
 
+            // 2. 提取班次時間
             targetStops.forEach(stop => {
-                if (stop.bus) {
+                if (stop.bus && Array.isArray(stop.bus)) {
                     stop.bus.forEach(b => {
-                        if (b.arrivalTimeInSecond !== undefined) {
-                            const mins = Math.max(0, Math.floor(b.arrivalTimeInSecond / 60));
+                        let mins = null;
+
+                        // 判斷剩餘秒數或時間字串
+                        if (b.arrivalTimeInSecond !== undefined && b.arrivalTimeInSecond !== null) {
+                            mins = Math.max(0, Math.floor(b.arrivalTimeInSecond / 60));
+                        } else if (b.arrivalTimeText) {
+                            // 若無秒數，由時間文字解析
+                            const parts = b.arrivalTimeText.split(":");
+                            if (parts.length === 2) {
+                                const now = new Date();
+                                const busTime = new Date();
+                                busTime.setHours(parseInt(parts[0]), parseInt(parts[1]), 0);
+                                mins = Math.max(0, Math.round((busTime - now) / 60000));
+                            }
+                        }
+
+                        if (mins !== null && !isNaN(mins)) {
                             etaList.push({
                                 mins: mins,
-                                dest: b.busRemarks || ""
+                                dest: b.busRemarks || b.departureTimeText || ""
                             });
                         }
                     });
@@ -126,9 +156,13 @@ async function fetchAllMtrbusETA() {
 
 function saveAndFetchMtrbus() {
     for (let i = 0; i < 3; i++) {
-        const route = document.getElementById(`mtrbus-route-${i + 1}`).value.trim().toUpperCase();
-        const stopName = document.getElementById(`mtrbus-stop-${i + 1}`).value.trim();
-        const dir = document.getElementById(`mtrbus-dir-${i + 1}`).value;
+        const routeEl = document.getElementById(`mtrbus-route-${i + 1}`);
+        const stopEl = document.getElementById(`mtrbus-stop-${i + 1}`);
+        const dirEl = document.getElementById(`mtrbus-dir-${i + 1}`);
+
+        const route = routeEl ? routeEl.value.trim().toUpperCase() : "";
+        const stopName = stopEl ? stopEl.value.trim() : "";
+        const dir = dirEl ? dirEl.value : "outbound";
 
         mtrbusConfigs[i] = { route, stopName, dir };
     }
