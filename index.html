@@ -114,6 +114,34 @@
         panel.classList.toggle('hidden');
       }
     }
+
+    // 即時時鐘邏輯
+    function updateClock() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const days = ['日', '一', '二', '三', '四', '五', '六'];
+      const dayName = days[now.getDay()];
+
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12; // 轉為 12 小時制
+
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      const dateEl = document.getElementById('date');
+      const ampmEl = document.getElementById('ampm');
+      const clockEl = document.getElementById('clock');
+
+      if (dateEl) dateEl.innerText = `${year}年${month}月${date}日 (星期${dayName})`;
+      if (ampmEl) ampmEl.innerText = ampm;
+      if (clockEl) clockEl.innerText = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
   <script src="kmb.js"></script>
   <script src="citybus.js"></script>
