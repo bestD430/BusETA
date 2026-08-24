@@ -2,7 +2,6 @@
 // 城巴 ETA Widget (完整版)
 // =====================================
 
-// 預設 3 組城巴路線、站名與方向 (outbound 去程 / inbound 回程)
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
     { route: "E21A", stopName: "雍逸樓", dir: "outbound", stopId: null },
     { route: "E21B", stopName: "雍逸樓", dir: "outbound", stopId: null },
@@ -10,7 +9,6 @@ let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 填入儲存的設定值到輸入框與下拉選單
     for (let i = 0; i < 3; i++) {
         const conf = citybusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`citybus-route-${i + 1}`);
@@ -44,7 +42,6 @@ async function initAndFetchAllCitybus() {
 
 async function findCitybusStopId(route, keyword, dir) {
     try {
-        // 只抓取指定方向 (outbound / inbound) 的車站清單
         const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${dir}`);
         if (!res.ok) return null;
         const d = await res.json();
@@ -53,7 +50,6 @@ async function findCitybusStopId(route, keyword, dir) {
 
         const stopIds = d.data.map(s => s.stop);
 
-        // 平行發送 API 請求查詢每個車站的詳細名稱
         const stopPromises = stopIds.map(stopId =>
             fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${stopId}`)
                 .then(r => r.json())
@@ -64,7 +60,7 @@ async function findCitybusStopId(route, keyword, dir) {
 
         for (const detail of stopsDetails) {
             if (detail && detail.data && detail.data.name_tc && detail.data.name_tc.includes(keyword)) {
-                return detail.data.stop; // 回傳匹配該方向的車站 ID
+                return detail.data.stop;
             }
         }
     } catch (e) {
@@ -94,20 +90,24 @@ async function fetchAllCitybusETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, data }) => {
-        // 城巴 dir 代碼 (outbound -> O / inbound -> I)
         const dirCode = conf.dir === "outbound" ? "O" : "I";
         const etaList = data
             .filter(item => item.dir === dirCode && item.eta)
-            .slice(0, 2); // 每條路線顯示最新 2 班
+            .slice(0, 2);
 
         fullHtml += `<div class="route-group">`;
-        // 已移除去程/回程字樣，僅保留路線與站名
-        fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} (${conf.stopName})</div>`;
+        // 大字體路線標頭
+        fullHtml += `
+            <div class="route-header">
+                <span class="route-no">🚌 ${conf.route}</span>
+                <span class="route-stop">(${conf.stopName})</span>
+            </div>
+        `;
 
         if (etaList.length === 0) {
-            fullHtml += `<div style="font-size: 12px; color: #888;">暫無到站班次</div>`;
+            fullHtml += `<div style="font-size: 13px; color: #888; padding: 4px 0;">暫無到站班次</div>`;
         } else {
-            etaList.forEach(item => {
+            etaList.forEach((item, index) => {
                 const mins = Math.round((new Date(item.eta) - new Date()) / 60000);
                 const etaText = mins <= 0 ? "即將到站" : `${mins} 分鐘`;
 
@@ -117,12 +117,23 @@ async function fetchAllCitybusETA() {
 
                 const destText = item.dest_tc ? `往 ${item.dest_tc}` : "";
 
-                fullHtml += `
-                    <div class="eta-item">
-                        <span style="color:#ccc;">${destText}</span>
-                        <span class="${colorClass}">${etaText}</span>
-                    </div>
-                `;
+                if (index === 0) {
+                    // 首班到站時間 (大字體高亮區塊)
+                    fullHtml += `
+                        <div class="first-eta-item">
+                            <span class="first-eta-dest">${destText}</span>
+                            <span class="first-eta-time ${colorClass}">${etaText}</span>
+                        </div>
+                    `;
+                } else {
+                    // 下一班車 (小字體)
+                    fullHtml += `
+                        <div class="next-eta-item">
+                            <span>下班車：${destText}</span>
+                            <span>${etaText}</span>
+                        </div>
+                    `;
+                }
             });
         }
         fullHtml += `</div>`;
@@ -140,7 +151,6 @@ function saveAndFetchCitybus() {
         citybusConfigs[i] = { route, stopName, dir, stopId: null };
     }
 
-    // 自動收起設定面板
     if (typeof toggleSettings === "function") {
         toggleSettings("citybus-settings");
     }
@@ -148,7 +158,6 @@ function saveAndFetchCitybus() {
     initAndFetchAllCitybus();
 }
 
-// 每 30 秒自動刷新 ETA
 setInterval(() => {
     fetchAllCitybusETA();
 }, 30000);
