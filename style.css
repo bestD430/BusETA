@@ -62,11 +62,11 @@ html, body {
 }
 
 /* =====================================
-   網格與卡片 (Grid & Cards Layout)
+   網格與卡片 (Grid & Cards Layout - 已修正三卡片)
    ===================================== */
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
   padding: 12px;
   flex: 1;
@@ -206,18 +206,29 @@ html, body {
   margin-bottom: 0;
 }
 
-/* 路線大字體樣式 */
+/* 路線標頭與大號字體樣式 */
 .route-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+}
+
+/* 巴士公司 Logo 樣式 (加強透明圖檔清晰度) */
+.company-logo {
+  height: 22px;
+  width: auto;
+  vertical-align: middle;
+  object-fit: contain;
+  background-color: #ffffff;
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 
 .route-no {
   font-size: 26px;
   font-weight: 900;
-  color: #ffd60a; /* 醒目的黃色路線號 */
+  color: #ffd60a;
 }
 
 .route-stop {
@@ -244,7 +255,7 @@ html, body {
 }
 
 .first-eta-time {
-  font-size: 28px; /* 大號到站時間 */
+  font-size: 28px;
   font-weight: 900;
   letter-spacing: 0.5px;
 }
