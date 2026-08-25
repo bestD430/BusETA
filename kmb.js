@@ -1,10 +1,10 @@
 // =====================================
-// 九巴 / 龍運 ETA Widget (隱藏無班次路線版)
+// 九巴 / 龍運 ETA Widget (優化穩定版)
 // =====================================
 
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
     { route: "E31", stopName: "雍逸樓", dir: "outbound" },
-    { route: "E36A", stopName: "雍逸東", dir: "outbound" },
+    { route: "E36A", stopName: "雍逸樓", dir: "outbound" },
     { route: "N31", stopName: "雍逸樓", dir: "outbound" }
 ];
 
@@ -42,39 +42,23 @@ async function fetchAllKmbETA() {
             const route = conf.route.trim().toUpperCase();
             const bound = conf.dir === "inbound" ? "inbound" : "outbound";
             
-            // 取得該路線站名對照表
+            // 取得路線數據
             const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
             const routeStopsData = await routeStopsRes.json();
             
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 尋找符合站名關鍵字的車站 ID
-            let stopId = null;
-            if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim();
-                const allStopsRes = await fetch("https://data.etabus.gov.hk/v1/transport/kmb/stop");
-                const allStopsData = await allStopsRes.json();
-                
-                const matchedStops = allStopsData.data.filter(s => 
-                    s.name_tc && s.name_tc.includes(keyword)
-                ).map(s => s.stop);
+            let stopId = routeStopsData.data[0].stop; // 預設使用第一站
 
-                const found = routeStopsData.data.find(s => matchedStops.includes(s.stop));
-                if (found) stopId = found.stop;
-            }
-
-            // 若找不到特定站名，預設取第一站
-            if (!stopId) stopId = routeStopsData.data[0].stop;
-
-            // 取得 ETA 到站時間
-            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stopId}/${route}`);
+            // 取得該路線之 ETA 時間資訊
+            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${route}/1`);
             const etaData = await etaRes.json();
 
             if (!etaData.data) return { conf, etaList: [] };
 
             const now = new Date();
             const validEtas = etaData.data
-                .filter(item => item.eta)
+                .filter(item => item.dir === (bound === "outbound" ? "O" : "I") && item.eta)
                 .map(item => {
                     const etaTime = new Date(item.eta);
                     const mins = Math.max(0, Math.round((etaTime - now) / 60000));
@@ -93,7 +77,6 @@ async function fetchAllKmbETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, etaList }) => {
-        // 如果無班次，直接隱藏該路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -101,7 +84,7 @@ async function fetchAllKmbETA() {
             <div class="route-header">
                 <img src="${logoUrl}" alt="logo" class="company-logo">
                 <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
+                <span class="route-stop">(${conf.stopName || "主要車站"})</span>
             </div>
         `;
 
