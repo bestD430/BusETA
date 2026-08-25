@@ -1,16 +1,24 @@
 // =====================================
-// 港鐵巴士 ETA Widget (預設：K51, K51A @ 富泰)
+// 港鐵巴士 MTR Bus ETA Widget (修正版)
 // =====================================
+
+// 港鐵巴士常見路線與車站代碼對照表 (確保 API 正確獲取)
+const MTRBUS_STOP_MAP = {
+    "K51": { "富泰": "FUT", "屯門站": "TUM", "兆康": "SIH" },
+    "K76": { "天恒": "THM", "天恒邨": "THM", "天水圍站": "TIS" },
+    "506": { "屯門站": "TUM", "碼頭": "TMW", "兆麟": "SLL" },
+    "K52": { "屯門站": "TUM", "龍鼓灘": "LKT" }
+};
 
 let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
     { route: "K51", stopName: "富泰", dir: "outbound" },
-    { route: "K51A", stopName: "富泰", dir: "outbound" },
-    { route: "", stopName: "", dir: "outbound" }
+    { route: "K76", stopName: "天恒邨", dir: "outbound" },
+    { route: "506", stopName: "屯門站", dir: "outbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = mtrbusConfigs[i] || { route: "", stopName: "富泰", dir: "outbound" };
+        const conf = mtrbusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`mtrbus-route-${i + 1}`);
         const stopEl = document.getElementById(`mtrbus-stop-${i + 1}`);
         const dirEl = document.getElementById(`mtrbus-dir-${i + 1}`);
@@ -35,87 +43,59 @@ async function fetchAllMtrbusETA() {
         return;
     }
 
-    const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/a/ac/MTR_logo.svg";
+    const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/4/41/MTR_Bus_Logo.svg";
 
-    const promises = activeConfigs.map(conf =>
-        fetch("https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                routeName: conf.route.trim().toUpperCase(),
-                language: "zh"
-            })
-        })
-        .then(res => res.json())
-        .then(data => ({ conf, data }))
-        .catch(err => {
-            console.error(`港鐵巴士 ${conf.route} 載入失敗:`, err);
-            return { conf, data: null };
-        })
-    );
+    const promises = activeConfigs.map(async (conf) => {
+        try {
+            const route = conf.route.trim().toUpperCase();
+            const stopName = conf.stopName ? conf.stopName.trim() : "";
+            
+            // 查表獲取港鐵車站代碼，若無則嘗試預設代碼
+            let stopCode = MTRBUS_STOP_MAP[route]?.[stopName] || "FUT"; 
+
+            const res = await fetch("https://rt.mtr.com.hk/v1/transport/mtr/bus/getSchedule.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ language: "zh", routeName: route })
+            });
+
+            const data = await res.json();
+            if (!data || data.status !== 1 || !data.busStop) return { conf, etaList: [] };
+
+            // 尋找目標車站
+            let targetStop = data.busStop.find(s => s.busStopId === stopCode || (stopName && s.busStopNameNameTC?.includes(stopName)));
+            if (!targetStop) targetStop = data.busStop[0]; // fallback 第一站
+
+            if (!targetStop || !targetStop.bus) return { conf, etaList: [] };
+
+            const validEtas = targetStop.bus
+                .map(b => {
+                    const mins = parseInt(b.departureTimeInSecond / 60, 10);
+                    return {
+                        mins: isNaN(mins) ? 0 : Math.max(0, mins),
+                        dest: b.busArrivalTimeText || ""
+                    };
+                })
+                .slice(0, 2);
+
+            return { conf, etaList: validEtas };
+        } catch (e) {
+            console.error(`港鐵巴士 ${conf.route} 載入失敗:`, e);
+            return { conf, etaList: [] };
+        }
+    });
 
     const results = await Promise.all(promises);
 
-    results.forEach(({ conf, data }) => {
-        let etaList = [];
-
-        if (data && data.status === "1" && data.busStop && data.busStop.length > 0) {
-            let targetStops = data.busStop;
-
-            // 站名匹配 (自動兼容「富泰」、「富泰邨」或「富泰邨總站」)
-            if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim().replace("邨", "").replace("村", "").replace("總站", "");
-                const matched = data.busStop.filter(s => {
-                    const name1 = s.busStopTitleName || "";
-                    const name2 = s.busStopName || "";
-                    return name1.includes(keyword) || name2.includes(keyword) || name1.includes(conf.stopName) || name2.includes(conf.stopName);
-                });
-                if (matched.length > 0) {
-                    targetStops = matched;
-                }
-            }
-
-            // 提取到站時間
-            targetStops.forEach(stop => {
-                if (stop.bus && Array.isArray(stop.bus)) {
-                    stop.bus.forEach(b => {
-                        let mins = null;
-
-                        if (b.arrivalTimeInSecond !== undefined && b.arrivalTimeInSecond !== null) {
-                            mins = Math.max(0, Math.floor(b.arrivalTimeInSecond / 60));
-                        } else if (b.arrivalTimeText) {
-                            const parts = b.arrivalTimeText.split(":");
-                            if (parts.length === 2) {
-                                const now = new Date();
-                                const busTime = new Date();
-                                busTime.setHours(parseInt(parts[0]), parseInt(parts[1]), 0);
-                                mins = Math.max(0, Math.round((busTime - now) / 60000));
-                            }
-                        }
-
-                        if (mins !== null && !isNaN(mins)) {
-                            etaList.push({
-                                mins: mins,
-                                dest: b.busRemarks || b.departureTimeText || ""
-                            });
-                        }
-                    });
-                }
-            });
-
-            etaList.sort((a, b) => a.mins - b.mins);
-            etaList = etaList.slice(0, 2);
-        }
-
-        // 無班次時隱藏路線
+    results.forEach(({ conf, etaList }) => {
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
         fullHtml += `
             <div class="route-header">
-                <img src="${logoUrl}" alt="logo" class="company-logo">
+                <img src="${logoUrl}" alt="logo" class="company-logo" onerror="this.style.display='none'">
                 <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
+                <span class="route-stop">(${conf.stopName || "車站"})</span>
             </div>
         `;
 
