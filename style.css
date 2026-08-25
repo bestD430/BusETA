@@ -62,16 +62,24 @@ html, body {
 }
 
 /* =====================================
-   網格與卡片 (Grid & Cards Layout - 已修正三卡片)
+   網格與卡片 (三卡片佈局優化)
    ===================================== */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  /* 強制三等分卡片，完美適應 1024px 橫向螢幕 */
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   padding: 12px;
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* 手機垂直螢幕自動切換為單欄 */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
@@ -157,9 +165,9 @@ html, body {
   border: 1px solid #3a3a3c;
   color: #fff;
   border-radius: 8px;
-  padding: 6px 4px;
+  padding: 6px 2px;
   font-size: 13px;
-  width: 72px;
+  width: 78px; /* 微調寬度避免選項文字過長被遮蓋 */
   cursor: pointer;
   outline: none;
 }
@@ -214,7 +222,7 @@ html, body {
   margin-bottom: 6px;
 }
 
-/* 巴士公司 Logo 樣式 (加強透明圖檔清晰度) */
+/* 巴士公司 Logo 樣式 */
 .company-logo {
   height: 22px;
   width: auto;
