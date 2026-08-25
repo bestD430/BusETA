@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>香港巴士到站時間 ETA Widget (3班車版)</title>
+  <title>香港巴士到站時間 ETA Widget (深色模式)</title>
   <style>
+    /* 改為深灰色配色方案 */
     :root {
-      --bg-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --text-main: #333333;
-      --text-sub: #666666;
-      --border-color: #e0e0e0;
+      --bg-color: #121212;         /* 整體頁面底色 (深灰近黑) */
+      --card-bg: #1e1e1e;         /* Widget 卡片背景 (中深灰) */
+      --group-bg: #2a2a2a;        /* 路線分組背景 (深灰) */
+      --modal-bg: #242424;        /* 設定視窗背景 */
+      --input-bg: #333333;        /* 輸入框背景 */
+      --text-main: #e0e0e0;       /* 主文字顏色 (淺灰/白) */
+      --text-sub: #aaaaaa;        /* 次要文字顏色 (淡灰) */
+      --border-color: #383838;    /* 邊框顏色 */
       --kmb-red: #e60012;
-      --citybus-yellow: #f8c300;
+      --citybus-yellow: #d9a000;
       --mtr-red: #0072ce;
-      --eta-green: #2e7d32;
-      --eta-orange: #ed6c02;
-      --eta-red: #d32f2f;
+      --eta-green: #4caf50;       /* 深色底適用的綠色 */
+      --eta-orange: #ff9800;      /* 深色底適用的橙色 */
+      --eta-red: #f44336;         /* 深色底適用的紅色 */
     }
 
     * {
@@ -37,16 +41,17 @@
     .widget-card {
       background: var(--card-bg);
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
       padding: 16px;
       margin-bottom: 20px;
+      border: 1px solid var(--border-color);
     }
 
     .widget-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
       padding-bottom: 8px;
       margin-bottom: 12px;
     }
@@ -57,6 +62,7 @@
       gap: 8px;
       font-size: 18px;
       font-weight: bold;
+      color: var(--text-main);
     }
 
     .company-tag {
@@ -67,7 +73,7 @@
     }
 
     .tag-kmb { background-color: var(--kmb-red); }
-    .tag-citybus { background-color: #d9a000; }
+    .tag-citybus { background-color: var(--citybus-yellow); color: #000; font-weight: bold; }
     .tag-mtrbus { background-color: var(--mtr-red); }
 
     .btn-settings {
@@ -75,15 +81,16 @@
       border: none;
       cursor: pointer;
       font-size: 18px;
-      opacity: 0.7;
+      opacity: 0.8;
       transition: opacity 0.2s;
+      filter: invert(1); /* 反轉圖示顏色以配合深色底 */
     }
 
     .btn-settings:hover { opacity: 1; }
 
     /* 路線卡片組 */
     .route-group {
-      background: #fafafa;
+      background: var(--group-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 12px;
@@ -102,16 +109,12 @@
     .route-no {
       font-size: 20px;
       font-weight: bold;
+      color: #ffffff;
     }
 
     .route-stop {
       font-size: 13px;
       color: var(--text-sub);
-    }
-
-    .company-logo {
-      height: 16px;
-      vertical-align: middle;
     }
 
     /* ETA 時間區塊 */
@@ -124,7 +127,7 @@
       font-weight: bold;
     }
 
-    .first-eta-dest { font-size: 14px; color: #444; }
+    .first-eta-dest { font-size: 14px; color: #cccccc; }
     .first-eta-time { font-size: 18px; }
 
     .next-eta-item {
@@ -146,7 +149,7 @@
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.75);
       align-items: center;
       justify-content: center;
       z-index: 999;
@@ -155,13 +158,15 @@
     .settings-modal.active { display: flex; }
 
     .settings-content {
-      background: #fff;
+      background: var(--modal-bg);
+      color: var(--text-main);
       padding: 20px;
       border-radius: 12px;
       width: 90%;
       max-width: 400px;
       max-height: 85vh;
       overflow-y: auto;
+      border: 1px solid var(--border-color);
     }
 
     .settings-content h3 {
@@ -174,7 +179,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      background: #f9f9f9;
+      background: var(--group-bg);
       padding: 10px;
       border-radius: 6px;
       margin-bottom: 10px;
@@ -187,6 +192,8 @@
 
     .config-inputs input, .config-inputs select {
       padding: 6px 8px;
+      background: var(--input-bg);
+      color: var(--text-main);
       border: 1px solid var(--border-color);
       border-radius: 4px;
       font-size: 13px;
@@ -209,8 +216,8 @@
       font-size: 14px;
     }
 
-    .btn-primary { background: #007bff; color: #fff; }
-    .btn-secondary { background: #ccc; color: #333; }
+    .btn-primary { background: #0d6efd; color: #fff; }
+    .btn-secondary { background: #444; color: #ccc; }
   </style>
 </head>
 <body>
