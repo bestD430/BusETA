@@ -1,23 +1,23 @@
 // =====================================
-// 九巴 / 龍運 ETA Widget (隱藏無班次路線版)
+// 九巴 / 龍運 ETA Widget (預設：逸東邨雍逸樓 inbound)
 // =====================================
 
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
-    { route: "E31", stopName: "逸東邨雍逸樓", dir: "outbound" },
-    { route: "E36A", stopName: "逸東邨雍逸樓", dir: "outbound" },
-    { route: "N31", stopName: "逸東邨雍逸樓", dir: "outbound" }
+    { route: "E31", stopName: "逸東邨雍逸樓", dir: "inbound" },
+    { route: "E36A", stopName: "逸東邨雍逸樓", dir: "inbound" },
+    { route: "N31", stopName: "逸東邨雍逸樓", dir: "inbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "outbound" };
+        const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "inbound" };
         const routeEl = document.getElementById(`kmb-route-${i + 1}`);
         const stopEl = document.getElementById(`kmb-stop-${i + 1}`);
         const dirEl = document.getElementById(`kmb-dir-${i + 1}`);
 
         if (routeEl) routeEl.value = conf.route;
         if (stopEl) stopEl.value = conf.stopName;
-        if (dirEl) dirEl.value = conf.dir || "outbound";
+        if (dirEl) dirEl.value = conf.dir || "inbound";
     }
 
     fetchAllKmbETA();
@@ -149,7 +149,7 @@ function saveAndFetchKmb() {
 
         const route = routeEl ? routeEl.value.trim().toUpperCase() : "";
         const stopName = stopEl ? stopEl.value.trim() : "";
-        const dir = dirEl ? dirEl.value : "outbound";
+        const dir = dirEl ? dirEl.value : "inbound";
 
         kmbConfigs[i] = { route, stopName, dir };
     }
