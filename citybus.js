@@ -1,23 +1,23 @@
 // =====================================
-// 城巴 ETA Widget (預設：逸東邨雍逸樓 inbound)
+// 城巴 ETA Widget (容錯增強版)
 // =====================================
 
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
-    { route: "E21A", stopName: "逸東邨雍逸樓", dir: "inbound" },
-    { route: "E21B", stopName: "逸東邨雍逸樓", dir: "inbound" },
-    { route: "S52", stopName: "逸東邨雍逸樓", dir: "inbound" }
+    { route: "E21A", stopName: "雍逸樓", dir: "outbound" },
+    { route: "E21B", stopName: "雍逸樓", dir: "outbound" },
+    { route: "S52", stopName: "逸東邨總站", dir: "outbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = citybusConfigs[i] || { route: "", stopName: "", dir: "inbound" };
+        const conf = citybusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`citybus-route-${i + 1}`);
         const stopEl = document.getElementById(`citybus-stop-${i + 1}`);
         const dirEl = document.getElementById(`citybus-dir-${i + 1}`);
 
         if (routeEl) routeEl.value = conf.route;
         if (stopEl) stopEl.value = conf.stopName;
-        if (dirEl) dirEl.value = conf.dir || "inbound";
+        if (dirEl) dirEl.value = conf.dir || "outbound";
     }
 
     fetchAllCitybusETA();
@@ -43,26 +43,32 @@ async function fetchAllCitybusETA() {
             const boundParam = conf.dir === "inbound" ? "inbound" : "outbound";
             const dir = conf.dir === "inbound" ? "I" : "O";
 
-            // 1. 取得該路線的車站對照表
+            // 1. 取得車站對照表
             const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${boundParam}`);
             const routeStopsData = await routeStopsRes.json();
 
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 2. 尋找符合關鍵字的車站 ID
+            // 2. 尋找車站 ID (容錯修剪：剔除「逸東邨」前綴避免搜尋失敗)
             let stopId = null;
             if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim();
+                const rawKeyword = conf.stopName.trim();
+                const keyword = rawKeyword.replace("逸東邨", "");
+
                 for (const s of routeStopsData.data) {
                     const stopDetailRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/stop/${s.stop}`);
                     const stopDetailData = await stopDetailRes.json();
-                    if (stopDetailData.data && stopDetailData.data.name_tc && stopDetailData.data.name_tc.includes(keyword)) {
-                        stopId = s.stop;
-                        break;
+                    if (stopDetailData.data && stopDetailData.data.name_tc) {
+                        const name = stopDetailData.data.name_tc;
+                        if (name.includes(keyword) || name.includes(rawKeyword)) {
+                            stopId = s.stop;
+                            break;
+                        }
                     }
                 }
             }
 
+            // 匹配失敗時自動 fallback 到第一站
             if (!stopId) stopId = routeStopsData.data[0].stop;
 
             // 3. 取得 ETA 到站時間
@@ -92,7 +98,6 @@ async function fetchAllCitybusETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, etaList }) => {
-        // 如果無班次，直接隱藏該路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -134,7 +139,7 @@ async function fetchAllCitybusETA() {
     });
 
     if (fullHtml === "") {
-        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
+        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次 (請檢查方向是否為去程)</div>`;
     }
 
     container.innerHTML = fullHtml;
@@ -148,7 +153,7 @@ function saveAndFetchCitybus() {
 
         const route = routeEl ? routeEl.value.trim().toUpperCase() : "";
         const stopName = stopEl ? stopEl.value.trim() : "";
-        const dir = dirEl ? dirEl.value : "inbound";
+        const dir = dirEl ? dirEl.value : "outbound";
 
         citybusConfigs[i] = { route, stopName, dir };
     }
