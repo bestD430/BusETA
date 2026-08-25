@@ -3,9 +3,9 @@
 // =====================================
 
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
-    { route: "E31", stopName: "雍逸樓", dir: "outbound" },
-    { route: "E36A", stopName: "雍逸東", dir: "outbound" },
-    { route: "N31", stopName: "雍逸樓", dir: "outbound" }
+    { route: "E31", stopName: "逸東邨雍逸樓", dir: "outbound" },
+    { route: "E36A", stopName: "逸東邨雍逸樓", dir: "outbound" },
+    { route: "N31", stopName: "逸東邨雍逸樓", dir: "outbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
