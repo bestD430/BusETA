@@ -177,3 +177,4 @@ function saveAndFetchCitybus() {
 }
 
 setInterval(fetchAllCitybusETA, 30000);
+
