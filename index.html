@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>巴士到站時間儀表板</title>
-  <!-- 更新版本號 v=5 強迫瀏覽器重新載入最新 CSS -->
-  <link rel="stylesheet" href="style.css?v=5">
+  <!-- 更新版本號 v=6 強迫瀏覽器重新載入最新 CSS -->
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -19,7 +19,7 @@
       <div id="weather-info" style="font-size: 12px; margin-top: 4px; color: #555; font-weight: normal;">載入天氣中...</div>
     </div>
 
-    <!-- 內容網格卡片 (適應三卡片佈局) -->
+    <!-- 內容網格卡片 -->
     <div class="grid">
       
       <!-- 1. 九巴 / 龍運 卡片 -->
@@ -33,7 +33,7 @@
           <div class="bus-inputs-group">
             <div class="bus-row">
               <input type="text" id="kmb-route-1" placeholder="路線 1 (例: E31)">
-              <input type="text" id="kmb-stop-1" placeholder="站名 (例: 雍逸樓)">
+              <input type="text" id="kmb-stop-1" placeholder="站名 (例: 逸東邨雍逸樓)">
               <select id="kmb-dir-1">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -41,7 +41,7 @@
             </div>
             <div class="bus-row">
               <input type="text" id="kmb-route-2" placeholder="路線 2 (例: E36A)">
-              <input type="text" id="kmb-stop-2" placeholder="站名 (例: 雍逸東)">
+              <input type="text" id="kmb-stop-2" placeholder="站名 (例: 逸東邨雍逸樓)">
               <select id="kmb-dir-2">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -49,7 +49,7 @@
             </div>
             <div class="bus-row">
               <input type="text" id="kmb-route-3" placeholder="路線 3 (例: N31)">
-              <input type="text" id="kmb-stop-3" placeholder="站名 (例: 雍逸樓)">
+              <input type="text" id="kmb-stop-3" placeholder="站名 (例: 逸東邨雍逸樓)">
               <select id="kmb-dir-3">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -73,7 +73,7 @@
           <div class="bus-inputs-group">
             <div class="bus-row">
               <input type="text" id="citybus-route-1" placeholder="路線 1 (例: E21A)">
-              <input type="text" id="citybus-stop-1" placeholder="站名 (例: 雍逸樓)">
+              <input type="text" id="citybus-stop-1" placeholder="站名 (例: 逸東邨雍逸樓)">
               <select id="citybus-dir-1">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -81,7 +81,7 @@
             </div>
             <div class="bus-row">
               <input type="text" id="citybus-route-2" placeholder="路線 2 (例: E21B)">
-              <input type="text" id="citybus-stop-2" placeholder="站名 (例: 雍逸樓)">
+              <input type="text" id="citybus-stop-2" placeholder="站名 (例: 逸東邨雍逸樓)">
               <select id="citybus-dir-2">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -89,7 +89,7 @@
             </div>
             <div class="bus-row">
               <input type="text" id="citybus-route-3" placeholder="路線 3 (例: S52)">
-              <input type="text" id="citybus-stop-3" placeholder="站名 (例: 逸東邨總站)">
+              <input type="text" id="citybus-stop-3" placeholder="站名 (例: 逸東邨雍逸樓)">
               <select id="citybus-dir-3">
                 <option value="outbound">去程</option>
                 <option value="inbound">回程</option>
@@ -207,8 +207,8 @@
   </script>
 
   <!-- 載入帶版本號的 JS 檔案 -->
-  <script src="kmb.js?v=5"></script>
-  <script src="citybus.js?v=5"></script>
-  <script src="mtrbus.js?v=5"></script>
+  <script src="kmb.js?v=6"></script>
+  <script src="citybus.js?v=6"></script>
+  <script src="mtrbus.js?v=6"></script>
 </body>
 </html>
