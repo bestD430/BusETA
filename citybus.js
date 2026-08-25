@@ -2,7 +2,6 @@
 // 城巴 ETA Widget (完整版)
 // =====================================
 
-// 預設 3 組城巴路線、站名與方向 (outbound 去程 / inbound 回程)
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
     { route: "E21A", stopName: "雍逸樓", dir: "outbound", stopId: null },
     { route: "E21B", stopName: "雍逸樓", dir: "outbound", stopId: null },
@@ -10,7 +9,6 @@ let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 填入儲存的設定值到輸入框與下拉選單
     for (let i = 0; i < 3; i++) {
         const conf = citybusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`citybus-route-${i + 1}`);
@@ -44,7 +42,6 @@ async function initAndFetchAllCitybus() {
 
 async function findCitybusStopId(route, keyword, dir) {
     try {
-        // 只抓取指定方向 (outbound / inbound) 的車站清單
         const res = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${route}/${dir}`);
         if (!res.ok) return null;
         const d = await res.json();
@@ -53,7 +50,6 @@ async function findCitybusStopId(route, keyword, dir) {
 
         const stopIds = d.data.map(s => s.stop);
 
-        // 平行發送 API 請求查詢每個車站的詳細名稱
         const stopPromises = stopIds.map(stopId =>
             fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${stopId}`)
                 .then(r => r.json())
@@ -64,7 +60,7 @@ async function findCitybusStopId(route, keyword, dir) {
 
         for (const detail of stopsDetails) {
             if (detail && detail.data && detail.data.name_tc && detail.data.name_tc.includes(keyword)) {
-                return detail.data.stop; // 回傳匹配該方向的車站 ID
+                return detail.data.stop;
             }
         }
     } catch (e) {
@@ -94,15 +90,19 @@ async function fetchAllCitybusETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, data }) => {
-        // 城巴 dir 代碼 (outbound -> O / inbound -> I)
         const dirCode = conf.dir === "outbound" ? "O" : "I";
         const etaList = data
             .filter(item => item.dir === dirCode && item.eta)
-            .slice(0, 2); // 每條路線顯示最新 2 班
+            .slice(0, 2);
 
         fullHtml += `<div class="route-group">`;
-        // 已移除去程/回程字樣，僅保留路線與站名
-        fullHtml += `<div style="font-weight: bold; color: #fff; font-size: 14px;">🚌 ${conf.route} (${conf.stopName})</div>`;
+        // 路線號碼放大顯示 (.route-no)
+        fullHtml += `
+            <div class="route-header">
+                <span class="route-no">🚌 ${conf.route}</span>
+                <span class="route-stop">(${conf.stopName})</span>
+            </div>
+        `;
 
         if (etaList.length === 0) {
             fullHtml += `<div style="font-size: 12px; color: #888;">暫無到站班次</div>`;
@@ -140,7 +140,6 @@ function saveAndFetchCitybus() {
         citybusConfigs[i] = { route, stopName, dir, stopId: null };
     }
 
-    // 自動收起設定面板
     if (typeof toggleSettings === "function") {
         toggleSettings("citybus-settings");
     }
@@ -148,7 +147,6 @@ function saveAndFetchCitybus() {
     initAndFetchAllCitybus();
 }
 
-// 每 30 秒自動刷新 ETA
 setInterval(() => {
     fetchAllCitybusETA();
 }, 30000);
