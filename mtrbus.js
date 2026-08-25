@@ -1,5 +1,5 @@
 // =====================================
-// 港鐵巴士 ETA Widget (修復港鐵 API 比對)
+// 港鐵巴士 ETA Widget (參照 kmb.js 結構優化版)
 // =====================================
 
 let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
@@ -10,7 +10,7 @@ let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = mtrbusConfigs[i] || { route: "", stopName: "富泰", dir: "outbound" };
+        const conf = mtrbusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`mtrbus-route-${i + 1}`);
         const stopEl = document.getElementById(`mtrbus-stop-${i + 1}`);
         const dirEl = document.getElementById(`mtrbus-dir-${i + 1}`);
@@ -37,32 +37,28 @@ async function fetchAllMtrbusETA() {
 
     const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/a/ac/MTR_logo.svg";
 
-    const promises = activeConfigs.map(conf =>
-        fetch("https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                routeName: conf.route.trim().toUpperCase(),
-                language: "zh"
-            })
-        })
-        .then(res => res.json())
-        .then(data => ({ conf, data }))
-        .catch(err => {
-            console.error(`港鐵巴士 ${conf.route} 載入失敗:`, err);
-            return { conf, data: null };
-        })
-    );
+    const promises = activeConfigs.map(async (conf) => {
+        try {
+            const route = conf.route.trim().toUpperCase();
 
-    const results = await Promise.all(promises);
+            // 港鐵巴士 API (POST 請求)
+            const res = await fetch("https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    routeName: route,
+                    language: "zh"
+                })
+            });
+            const data = await res.json();
 
-    results.forEach(({ conf, data }) => {
-        let etaList = [];
+            if (!data || data.status !== "1" || !data.busStop || data.busStop.length === 0) {
+                return { conf, etaList: [] };
+            }
 
-        if (data && data.status === "1" && data.busStop && data.busStop.length > 0) {
             let targetStops = data.busStop;
 
-            // 站名匹配：只要 API 站名包含設定的關鍵字（如「富泰」）即匹配
+            // 比對車站名稱
             if (conf.stopName && conf.stopName.trim() !== "") {
                 const searchKey = conf.stopName.trim();
                 const matched = data.busStop.filter(s => {
@@ -70,13 +66,14 @@ async function fetchAllMtrbusETA() {
                     const name2 = s.busStopName || "";
                     return name1.includes(searchKey) || name2.includes(searchKey);
                 });
-                
                 if (matched.length > 0) {
                     targetStops = matched;
                 }
             }
 
-            // 提取到站時間
+            let rawEtas = [];
+            const now = new Date();
+
             targetStops.forEach(stop => {
                 if (stop.bus && Array.isArray(stop.bus)) {
                     stop.bus.forEach(b => {
@@ -87,7 +84,6 @@ async function fetchAllMtrbusETA() {
                         } else if (b.arrivalTimeText) {
                             const parts = b.arrivalTimeText.split(":");
                             if (parts.length === 2) {
-                                const now = new Date();
                                 const busTime = new Date();
                                 busTime.setHours(parseInt(parts[0]), parseInt(parts[1]), 0);
                                 mins = Math.max(0, Math.round((busTime - now) / 60000));
@@ -95,7 +91,7 @@ async function fetchAllMtrbusETA() {
                         }
 
                         if (mins !== null && !isNaN(mins)) {
-                            etaList.push({
+                            rawEtas.push({
                                 mins: mins,
                                 dest: b.busRemarks || b.departureTimeText || ""
                             });
@@ -104,10 +100,20 @@ async function fetchAllMtrbusETA() {
                 }
             });
 
-            etaList.sort((a, b) => a.mins - b.mins);
-            etaList = etaList.slice(0, 2);
-        }
+            const validEtas = rawEtas
+                .sort((a, b) => a.mins - b.mins)
+                .slice(0, 2);
 
+            return { conf, etaList: validEtas };
+        } catch (e) {
+            console.error(`港鐵巴士 ${conf.route} 載入失敗:`, e);
+            return { conf, etaList: [] };
+        }
+    });
+
+    const results = await Promise.all(promises);
+
+    results.forEach(({ conf, etaList }) => {
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -115,7 +121,7 @@ async function fetchAllMtrbusETA() {
             <div class="route-header">
                 <img src="${logoUrl}" alt="logo" class="company-logo">
                 <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
+                <span class="route-stop">(${conf.stopName || "主要車站"})</span>
             </div>
         `;
 
