@@ -1,5 +1,5 @@
 // =====================================
-// 城巴 ETA Widget (容錯增強版)
+// 城巴 ETA Widget (隱藏無班次路線版)
 // =====================================
 
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
@@ -40,35 +40,28 @@ async function fetchAllCitybusETA() {
     const promises = activeConfigs.map(async (conf) => {
         try {
             const route = conf.route.trim().toUpperCase();
-            const boundParam = conf.dir === "inbound" ? "inbound" : "outbound";
             const dir = conf.dir === "inbound" ? "I" : "O";
 
-            // 1. 取得車站對照表
-            const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${boundParam}`);
+            // 1. 取得該路線的車站對照表
+            const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${conf.dir === "inbound" ? "inbound" : "outbound"}`);
             const routeStopsData = await routeStopsRes.json();
 
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 2. 尋找車站 ID (容錯修剪：剔除「逸東邨」前綴避免搜尋失敗)
+            // 2. 尋找車站 ID
             let stopId = null;
             if (conf.stopName && conf.stopName.trim() !== "") {
-                const rawKeyword = conf.stopName.trim();
-                const keyword = rawKeyword.replace("逸東邨", "");
-
+                const keyword = conf.stopName.trim();
                 for (const s of routeStopsData.data) {
                     const stopDetailRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/stop/${s.stop}`);
                     const stopDetailData = await stopDetailRes.json();
-                    if (stopDetailData.data && stopDetailData.data.name_tc) {
-                        const name = stopDetailData.data.name_tc;
-                        if (name.includes(keyword) || name.includes(rawKeyword)) {
-                            stopId = s.stop;
-                            break;
-                        }
+                    if (stopDetailData.data && stopDetailData.data.name_tc && stopDetailData.data.name_tc.includes(keyword)) {
+                        stopId = s.stop;
+                        break;
                     }
                 }
             }
 
-            // 匹配失敗時自動 fallback 到第一站
             if (!stopId) stopId = routeStopsData.data[0].stop;
 
             // 3. 取得 ETA 到站時間
@@ -98,6 +91,7 @@ async function fetchAllCitybusETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, etaList }) => {
+        // 如果無班次，直接隱藏該路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -139,7 +133,7 @@ async function fetchAllCitybusETA() {
     });
 
     if (fullHtml === "") {
-        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次 (請檢查方向是否為去程)</div>`;
+        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
     }
 
     container.innerHTML = fullHtml;
