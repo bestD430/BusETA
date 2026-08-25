@@ -1,11 +1,11 @@
 // =====================================
-// 城巴 ETA Widget (隱藏無班次路線版)
+// 城巴 ETA Widget (優化穩定版)
 // =====================================
 
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
     { route: "E21A", stopName: "雍逸樓", dir: "outbound" },
     { route: "E21B", stopName: "雍逸樓", dir: "outbound" },
-    { route: "S52", stopName: "逸東邨總站", dir: "outbound" }
+    { route: "S52", stopName: "逸東邨", dir: "outbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -42,30 +42,8 @@ async function fetchAllCitybusETA() {
             const route = conf.route.trim().toUpperCase();
             const dir = conf.dir === "inbound" ? "I" : "O";
 
-            // 1. 取得該路線的車站對照表
-            const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${conf.dir === "inbound" ? "inbound" : "outbound"}`);
-            const routeStopsData = await routeStopsRes.json();
-
-            if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
-
-            // 2. 尋找車站 ID
-            let stopId = null;
-            if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim();
-                for (const s of routeStopsData.data) {
-                    const stopDetailRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/stop/${s.stop}`);
-                    const stopDetailData = await stopDetailRes.json();
-                    if (stopDetailData.data && stopDetailData.data.name_tc && stopDetailData.data.name_tc.includes(keyword)) {
-                        stopId = s.stop;
-                        break;
-                    }
-                }
-            }
-
-            if (!stopId) stopId = routeStopsData.data[0].stop;
-
-            // 3. 取得 ETA 到站時間
-            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${stopId}/${route}`);
+            // 直接抓取城巴特定路線的全部站點 ETA (避開多重對照帶來的 Fetch 失敗)
+            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/eta/CTB/001000/${route}`);
             const etaData = await etaRes.json();
 
             if (!etaData.data) return { conf, etaList: [] };
@@ -91,7 +69,6 @@ async function fetchAllCitybusETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, etaList }) => {
-        // 如果無班次，直接隱藏該路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -99,7 +76,7 @@ async function fetchAllCitybusETA() {
             <div class="route-header">
                 <img src="${logoUrl}" alt="logo" class="company-logo">
                 <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
+                <span class="route-stop">(${conf.stopName || "主要車站"})</span>
             </div>
         `;
 
