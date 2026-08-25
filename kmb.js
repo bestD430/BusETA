@@ -1,5 +1,5 @@
 // =====================================
-// 九巴 / 龍運 ETA Widget (容錯增強版)
+// 九巴 / 龍運 ETA Widget (隱藏無班次路線版)
 // =====================================
 
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
@@ -42,33 +42,31 @@ async function fetchAllKmbETA() {
             const route = conf.route.trim().toUpperCase();
             const bound = conf.dir === "inbound" ? "inbound" : "outbound";
             
-            // 1. 取得該路線站名對照表
+            // 取得該路線站名對照表
             const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
             const routeStopsData = await routeStopsRes.json();
             
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 2. 搜尋車站 ID (支援關鍵字自動修剪，如「逸東邨雍逸樓」-> 取「雍逸樓」)
+            // 尋找符合站名關鍵字的車站 ID
             let stopId = null;
             if (conf.stopName && conf.stopName.trim() !== "") {
-                const rawKeyword = conf.stopName.trim();
-                const keyword = rawKeyword.replace("逸東邨", ""); // 自動淨化站名
-                
+                const keyword = conf.stopName.trim();
                 const allStopsRes = await fetch("https://data.etabus.gov.hk/v1/transport/kmb/stop");
                 const allStopsData = await allStopsRes.json();
                 
                 const matchedStops = allStopsData.data.filter(s => 
-                    s.name_tc && (s.name_tc.includes(keyword) || s.name_tc.includes(rawKeyword))
+                    s.name_tc && s.name_tc.includes(keyword)
                 ).map(s => s.stop);
 
                 const found = routeStopsData.data.find(s => matchedStops.includes(s.stop));
                 if (found) stopId = found.stop;
             }
 
-            // 若依然找不到特定站名，自動退回取路線的第一站 (確保不空白)
+            // 若找不到特定站名，預設取第一站
             if (!stopId) stopId = routeStopsData.data[0].stop;
 
-            // 3. 取得 ETA 到站時間
+            // 取得 ETA 到站時間
             const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stopId}/${route}`);
             const etaData = await etaRes.json();
 
@@ -95,6 +93,7 @@ async function fetchAllKmbETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, etaList }) => {
+        // 如果無班次，直接隱藏該路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -136,7 +135,7 @@ async function fetchAllKmbETA() {
     });
 
     if (fullHtml === "") {
-        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次 (請檢查方向是否為去程)</div>`;
+        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
     }
 
     container.innerHTML = fullHtml;
