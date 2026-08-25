@@ -1,5 +1,5 @@
 // =====================================
-// 城巴 ETA Widget (修復站名比對邏輯)
+// 城巴 ETA Widget (參照 kmb.js 結構優化版)
 // =====================================
 
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
@@ -41,44 +41,44 @@ async function fetchAllCitybusETA() {
         try {
             const route = conf.route.trim().toUpperCase();
             const boundParam = conf.dir === "inbound" ? "inbound" : "outbound";
-            const dir = conf.dir === "inbound" ? "I" : "O";
+            const dirChar = conf.dir === "inbound" ? "I" : "O";
 
-            // 1. 取得車站對照表
+            // 1. 取得路線車站清單
             const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${boundParam}`);
             const routeStopsData = await routeStopsRes.json();
 
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 2. 尋找車站 ID (全字串與關鍵字彈性比對)
-            let stopId = null;
-            if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim();
+            let targetStopId = routeStopsData.data[0].stop; // 預設使用第一站
 
+            // 2. 尋找符合使用者輸入站名的 Stop ID
+            if (conf.stopName && conf.stopName.trim() !== "") {
+                const searchKey = conf.stopName.trim();
                 for (const s of routeStopsData.data) {
-                    const stopDetailRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/stop/${s.stop}`);
-                    const stopDetailData = await stopDetailRes.json();
-                    if (stopDetailData.data && stopDetailData.data.name_tc) {
-                        const name = stopDetailData.data.name_tc;
-                        if (name.includes(keyword) || keyword.includes(name)) {
-                            stopId = s.stop;
-                            break;
+                    try {
+                        const stopDetailRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/stop/${s.stop}`);
+                        const stopDetailData = await stopDetailRes.json();
+                        if (stopDetailData.data && stopDetailData.data.name_tc) {
+                            if (stopDetailData.data.name_tc.includes(searchKey)) {
+                                targetStopId = s.stop;
+                                break;
+                            }
                         }
+                    } catch (e) {
+                        // 忽略單一站點獲取失敗
                     }
                 }
             }
 
-            // 匹配失敗時預設顯示第一站，避免空白
-            if (!stopId) stopId = routeStopsData.data[0].stop;
-
-            // 3. 取得 ETA 到站時間
-            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${stopId}/${route}`);
+            // 3. 取得該站點特定路線之 ETA
+            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${targetStopId}/${route}`);
             const etaData = await etaRes.json();
 
             if (!etaData.data) return { conf, etaList: [] };
 
             const now = new Date();
             const validEtas = etaData.data
-                .filter(item => item.dir === dir && item.eta)
+                .filter(item => item.dir === dirChar && item.eta)
                 .map(item => {
                     const etaTime = new Date(item.eta);
                     const mins = Math.max(0, Math.round((etaTime - now) / 60000));
@@ -104,7 +104,7 @@ async function fetchAllCitybusETA() {
             <div class="route-header">
                 <img src="${logoUrl}" alt="logo" class="company-logo">
                 <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
+                <span class="route-stop">(${conf.stopName || "主要車站"})</span>
             </div>
         `;
 
