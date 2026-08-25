@@ -3,8 +3,8 @@
 // =====================================
 
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
-    { route: "E21A", stopName: "雍逸樓", dir: "outbound" },
-    { route: "E21B", stopName: "雍逸樓", dir: "outbound" },
+    { route: "E21A", stopName: "逸東邨雍逸樓", dir: "outbound" },
+    { route: "E21B", stopName: "逸東邨雍逸樓", dir: "outbound" },
     { route: "S52", stopName: "逸東邨總站", dir: "outbound" }
 ];
 
