@@ -2,148 +2,71 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>交通 Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bus ETA Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="dashboard-container">
-    <!-- 頂部時鐘 Header -->
-    <div class="header">
-      <div id="warning-icon"></div>
-      <div id="date">----年--月--日 (星期-)</div>
-      <div id="ampm">--</div>
-      <div id="clock">00:00:00</div>
-    </div>
 
-    <!-- 底部資訊網格 Grid -->
-    <div class="grid">
-      
-      <!-- 九巴 / 龍運 卡片 -->
-      <div class="card">
-        <div class="card-header">
-          <h2>🚌 九巴／龍運</h2>
-          <button class="settings-btn" onclick="toggleSettings('kmb-settings')">⚙️ 設定</button>
-        </div>
-
-        <!-- 隱藏的設定區域 -->
-        <div id="kmb-settings" class="settings-panel hidden">
-          <div class="bus-inputs-group">
-            <div class="bus-row">
-              <input type="text" id="kmb-route-1" placeholder="路線 1" value="E31">
-              <input type="text" id="kmb-stop-1" placeholder="站名 1" value="雍逸樓">
-              <select id="kmb-dir-1">
-                <option value="outbound">去程</option>
-                <option value="inbound">回程</option>
-              </select>
-            </div>
-            <div class="bus-row">
-              <input type="text" id="kmb-route-2" placeholder="路線 2" value="E36A">
-              <input type="text" id="kmb-stop-2" placeholder="站名 2" value="雍逸東">
-              <select id="kmb-dir-2">
-                <option value="outbound">去程</option>
-                <option value="inbound">回程</option>
-              </select>
-            </div>
-            <div class="bus-row">
-              <input type="text" id="kmb-route-3" placeholder="路線 3" value="N31">
-              <input type="text" id="kmb-stop-3" placeholder="站名 3" value="雍逸樓">
-              <select id="kmb-dir-3">
-                <option value="outbound">去程</option>
-                <option value="inbound">回程</option>
-              </select>
-            </div>
-            <button onclick="saveAndFetchKmb()">儲存並更新</button>
-          </div>
-        </div>
-
-        <!-- 到站時間列表 -->
-        <div id="kmb" class="bus-eta-list">載入中...</div>
-      </div>
-
-      <!-- 城巴 卡片 -->
-      <div class="card">
-        <div class="card-header">
-          <h2>🚌 城巴</h2>
-          <button class="settings-btn" onclick="toggleSettings('citybus-settings')">⚙️ 設定</button>
-        </div>
-
-        <!-- 隱藏的設定區域 -->
-        <div id="citybus-settings" class="settings-panel hidden">
-          <div class="bus-inputs-group">
-            <div class="bus-row">
-              <input type="text" id="citybus-route-1" placeholder="路線 1" value="E21A">
-              <input type="text" id="citybus-stop-1" placeholder="站名 1" value="雍逸樓">
-              <select id="citybus-dir-1">
-                <option value="outbound">去程</option>
-                <option value="inbound">回程</option>
-              </select>
-            </div>
-            <div class="bus-row">
-              <input type="text" id="citybus-route-2" placeholder="路線 2" value="E21B">
-              <input type="text" id="citybus-stop-2" placeholder="站名 2" value="雍逸樓">
-              <select id="citybus-dir-2">
-                <option value="outbound">去程</option>
-                <option value="inbound">回程</option>
-              </select>
-            </div>
-            <div class="bus-row">
-              <input type="text" id="citybus-route-3" placeholder="路線 3" value="S52">
-              <input type="text" id="citybus-stop-3" placeholder="站名 3" value="逸東邨總站">
-              <select id="citybus-dir-3">
-                <option value="outbound">去程</option>
-                <option value="inbound">回程</option>
-              </select>
-            </div>
-            <button onclick="saveAndFetchCitybus()">儲存並更新</button>
-          </div>
-        </div>
-
-        <!-- 到站時間列表 -->
-        <div id="citybus" class="bus-eta-list">載入中...</div>
-      </div>
-
-    </div>
+  <!-- 頂部時間與警告標示區 -->
+  <div class="header">
+    <div id="warning-icon"></div>
+    <div id="date"></div>
+    <div id="ampm"></div>
+    <div id="clock"></div>
   </div>
 
-  <script>
-    // 切換設定區域顯示/隱藏
-    function toggleSettings(panelId) {
-      const panel = document.getElementById(panelId);
-      if (panel) {
-        panel.classList.toggle('hidden');
-      }
-    }
+  <!-- 卡片網格區 -->
+  <div class="grid">
 
-    // 即時時鐘邏輯
-    function updateClock() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const date = String(now.getDate()).padStart(2, '0');
-      const days = ['日', '一', '二', '三', '四', '五', '六'];
-      const dayName = days[now.getDay()];
+    <!-- 東涌天氣 -->
+    <div class="card">
+      <h2>🌤 東涌</h2>
+      <div id="tungchung">載入中...</div>
+    </div>
 
-      let hours = now.getHours();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12; // 轉為 12 小時制
+    <!-- 九巴 / 龍運 卡片 -->
+    <div class="card">
+      <h2>🚌 九巴／龍運</h2>
+      <div class="bus-inputs">
+        <input type="text" id="kmb-route" placeholder="路線 (例: E31)" value="E31">
+        <input type="text" id="kmb-stop-name" placeholder="站名或代號 (東涌纜車站 / TC413)" value="東涌纜車站">
+        <button onclick="saveAndFetchKmb()">更新</button>
+      </div>
+      <div id="kmb" class="bus-eta-list">載入中...</div>
+      <div id="kmb-stop-results"></div>
+    </div>
 
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
+    <!-- 城巴 卡片 -->
+    <div class="card">
+      <h2>🚌 城巴</h2>
+      <div class="bus-inputs">
+        <input type="text" id="citybus-route" placeholder="路線 (例: A21)" value="A21">
+        <input type="text" id="citybus-stop-name" placeholder="站名 (例: 金鐘站)" value="金鐘站">
+        <button onclick="saveAndFetchCitybus()">更新</button>
+      </div>
+      <div id="citybus" class="bus-eta-list">載入中...</div>
+    </div>
 
-      const dateEl = document.getElementById('date');
-      const ampmEl = document.getElementById('ampm');
-      const clockEl = document.getElementById('clock');
+    <!-- 教育局消息 -->
+    <div class="card">
+      <h2>📢 教育局消息</h2>
+      <div id="edb-msg">今天沒有特別公布</div>
+    </div>
 
-      if (dateEl) dateEl.innerText = `${year}年${month}月${date}日 (星期${dayName})`;
-      if (ampmEl) ampmEl.innerText = ampm;
-      if (clockEl) clockEl.innerText = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
-    }
+    <!-- 天文台警告 -->
+    <div class="card">
+      <h2>⚠️ 天文台警告</h2>
+      <div id="warning-msg">載入中...</div>
+    </div>
 
-    setInterval(updateClock, 1000);
-    updateClock();
-  </script>
+  </div>
+
+  <!-- 引入 JS 檔案 -->
+  <script src="clock.js"></script>
+  <script src="weather.js"></script>
   <script src="kmb.js"></script>
   <script src="citybus.js"></script>
+  <script src="warning.js"></script>
 </body>
 </html>
