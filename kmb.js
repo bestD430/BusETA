@@ -1,23 +1,23 @@
 // =====================================
-// 九巴 / 龍運 ETA Widget (預設：逸東邨雍逸樓 inbound)
+// 九巴 / 龍運 ETA Widget (容錯增強版)
 // =====================================
 
 let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
-    { route: "E31", stopName: "逸東邨雍逸樓", dir: "inbound" },
-    { route: "E36A", stopName: "逸東邨雍逸樓", dir: "inbound" },
-    { route: "N31", stopName: "逸東邨雍逸樓", dir: "inbound" }
+    { route: "E31", stopName: "雍逸樓", dir: "outbound" },
+    { route: "E36A", stopName: "雍逸東", dir: "outbound" },
+    { route: "N31", stopName: "雍逸樓", dir: "outbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "inbound" };
+        const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "outbound" };
         const routeEl = document.getElementById(`kmb-route-${i + 1}`);
         const stopEl = document.getElementById(`kmb-stop-${i + 1}`);
         const dirEl = document.getElementById(`kmb-dir-${i + 1}`);
 
         if (routeEl) routeEl.value = conf.route;
         if (stopEl) stopEl.value = conf.stopName;
-        if (dirEl) dirEl.value = conf.dir || "inbound";
+        if (dirEl) dirEl.value = conf.dir || "outbound";
     }
 
     fetchAllKmbETA();
@@ -42,31 +42,33 @@ async function fetchAllKmbETA() {
             const route = conf.route.trim().toUpperCase();
             const bound = conf.dir === "inbound" ? "inbound" : "outbound";
             
-            // 取得該路線站名對照表
+            // 1. 取得該路線站名對照表
             const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
             const routeStopsData = await routeStopsRes.json();
             
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 尋找符合站名關鍵字的車站 ID
+            // 2. 搜尋車站 ID (支援關鍵字自動修剪，如「逸東邨雍逸樓」-> 取「雍逸樓」)
             let stopId = null;
             if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim();
+                const rawKeyword = conf.stopName.trim();
+                const keyword = rawKeyword.replace("逸東邨", ""); // 自動淨化站名
+                
                 const allStopsRes = await fetch("https://data.etabus.gov.hk/v1/transport/kmb/stop");
                 const allStopsData = await allStopsRes.json();
                 
                 const matchedStops = allStopsData.data.filter(s => 
-                    s.name_tc && s.name_tc.includes(keyword)
+                    s.name_tc && (s.name_tc.includes(keyword) || s.name_tc.includes(rawKeyword))
                 ).map(s => s.stop);
 
                 const found = routeStopsData.data.find(s => matchedStops.includes(s.stop));
                 if (found) stopId = found.stop;
             }
 
-            // 若找不到特定站名，預設取第一站
+            // 若依然找不到特定站名，自動退回取路線的第一站 (確保不空白)
             if (!stopId) stopId = routeStopsData.data[0].stop;
 
-            // 取得 ETA 到站時間
+            // 3. 取得 ETA 到站時間
             const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stopId}/${route}`);
             const etaData = await etaRes.json();
 
@@ -93,7 +95,6 @@ async function fetchAllKmbETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, etaList }) => {
-        // 如果無班次，直接隱藏該路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
@@ -135,7 +136,7 @@ async function fetchAllKmbETA() {
     });
 
     if (fullHtml === "") {
-        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
+        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次 (請檢查方向是否為去程)</div>`;
     }
 
     container.innerHTML = fullHtml;
@@ -149,7 +150,7 @@ function saveAndFetchKmb() {
 
         const route = routeEl ? routeEl.value.trim().toUpperCase() : "";
         const stopName = stopEl ? stopEl.value.trim() : "";
-        const dir = dirEl ? dirEl.value : "inbound";
+        const dir = dirEl ? dirEl.value : "outbound";
 
         kmbConfigs[i] = { route, stopName, dir };
     }
