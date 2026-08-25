@@ -1,16 +1,16 @@
 // =====================================
-// 港鐵巴士 ETA Widget (容錯增強版)
+// 港鐵巴士 ETA Widget (預設：K51, K51A @ 富泰)
 // =====================================
 
 let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
-    { route: "K76", stopName: "天恒邨", dir: "outbound" },
-    { route: "506", stopName: "屯門站", dir: "outbound" },
-    { route: "K52", stopName: "屯門站", dir: "outbound" }
+    { route: "K51", stopName: "富泰", dir: "outbound" },
+    { route: "K51A", stopName: "富泰", dir: "outbound" },
+    { route: "", stopName: "", dir: "outbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = mtrbusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
+        const conf = mtrbusConfigs[i] || { route: "", stopName: "富泰", dir: "outbound" };
         const routeEl = document.getElementById(`mtrbus-route-${i + 1}`);
         const stopEl = document.getElementById(`mtrbus-stop-${i + 1}`);
         const dirEl = document.getElementById(`mtrbus-dir-${i + 1}`);
@@ -62,9 +62,9 @@ async function fetchAllMtrbusETA() {
         if (data && data.status === "1" && data.busStop && data.busStop.length > 0) {
             let targetStops = data.busStop;
 
-            // 站名匹配 (支援繁簡與模糊比對)
+            // 站名匹配 (自動兼容「富泰」、「富泰邨」或「富泰邨總站」)
             if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim().replace("邨", "").replace("村", "");
+                const keyword = conf.stopName.trim().replace("邨", "").replace("村", "").replace("總站", "");
                 const matched = data.busStop.filter(s => {
                     const name1 = s.busStopTitleName || "";
                     const name2 = s.busStopName || "";
@@ -75,7 +75,7 @@ async function fetchAllMtrbusETA() {
                 }
             }
 
-            // 提取時間
+            // 提取到站時間
             targetStops.forEach(stop => {
                 if (stop.bus && Array.isArray(stop.bus)) {
                     stop.bus.forEach(b => {
@@ -107,6 +107,7 @@ async function fetchAllMtrbusETA() {
             etaList = etaList.slice(0, 2);
         }
 
+        // 無班次時隱藏路線
         if (etaList.length === 0) return;
 
         fullHtml += `<div class="route-group">`;
