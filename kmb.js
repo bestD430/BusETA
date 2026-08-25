@@ -1,152 +1,402 @@
 // =====================================
-// 九巴 / 龍運 ETA Widget (優化穩定版)
+// 九巴 / 龍運 ETA Widget V10
+// 支援：
+// 1. 三條路線
+// 2. 站名模糊搜尋
+// 3. 去程 / 回程
+// 4. 30秒自動更新
 // =====================================
-
-let kmbConfigs = JSON.parse(localStorage.getItem("kmb_configs")) || [
-    { route: "E31", stopName: "雍逸樓", dir: "outbound" },
-    { route: "E36A", stopName: "雍逸樓", dir: "outbound" },
-    { route: "N31", stopName: "雍逸樓", dir: "outbound" }
+ 
+let kmbConfigs = JSON.parse(
+localStorage.getItem("kmb_configs")
+) || [
+{ route: "E31", stopName: "雍逸樓", dir: "outbound" },
+{ route: "E36A", stopName: "雍逸樓", dir: "outbound" },
+{ route: "N31", stopName: "雍逸樓", dir: "outbound" }
 ];
-
+ 
 document.addEventListener("DOMContentLoaded", () => {
-    for (let i = 0; i < 3; i++) {
-        const conf = kmbConfigs[i] || { route: "", stopName: "", dir: "outbound" };
-        const routeEl = document.getElementById(`kmb-route-${i + 1}`);
-        const stopEl = document.getElementById(`kmb-stop-${i + 1}`);
-        const dirEl = document.getElementById(`kmb-dir-${i + 1}`);
-
-        if (routeEl) routeEl.value = conf.route;
-        if (stopEl) stopEl.value = conf.stopName;
-        if (dirEl) dirEl.value = conf.dir || "outbound";
-    }
-
-    fetchAllKmbETA();
+ 
+console.log("KMB V10 Loaded");
+ 
+for (let i = 0; i < 3; i++) {
+ 
+const conf =
+kmbConfigs[i] ||
+{
+route: "",
+stopName: "",
+dir: "outbound"
+};
+ 
+const routeEl =
+document.getElementById(
+`kmb-route-${i + 1}`
+);
+ 
+const stopEl =
+document.getElementById(
+`kmb-stop-${i + 1}`
+);
+ 
+const dirEl =
+document.getElementById(
+`kmb-dir-${i + 1}`
+);
+ 
+if (routeEl)
+routeEl.value = conf.route;
+ 
+if (stopEl)
+stopEl.value = conf.stopName;
+ 
+if (dirEl)
+dirEl.value = conf.dir;
+}
+ 
+fetchAllKmbETA();
+ 
 });
-
+ 
+ 
+// =====================================
+// 查詢所有路線
+// =====================================
+ 
 async function fetchAllKmbETA() {
-    const container = document.getElementById("kmb");
-    if (!container) return;
-
-    let fullHtml = "";
-    const activeConfigs = kmbConfigs.filter(c => c.route && c.route.trim() !== "");
-
-    if (activeConfigs.length === 0) {
-        container.innerHTML = "<div style='color:#888; padding: 10px 0;'>請點擊上方「⚙️ 設定」輸入路線</div>";
-        return;
-    }
-
-    const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/2/2e/KMB_Logo.svg";
-
-    const promises = activeConfigs.map(async (conf) => {
-        try {
-            const route = conf.route.trim().toUpperCase();
-            const bound = conf.dir === "inbound" ? "inbound" : "outbound";
-            
-            // 取得路線數據
-            const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
-            const routeStopsData = await routeStopsRes.json();
-            
-            if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
-
-            let stopId = routeStopsData.data[0].stop; // 預設使用第一站
-
-            // 取得該路線之 ETA 時間資訊
-            const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${route}/1`);
-            const etaData = await etaRes.json();
-
-            if (!etaData.data) return { conf, etaList: [] };
-
-            const now = new Date();
-            const validEtas = etaData.data
-                .filter(item => item.dir === (bound === "outbound" ? "O" : "I") && item.eta)
-                .map(item => {
-                    const etaTime = new Date(item.eta);
-                    const mins = Math.max(0, Math.round((etaTime - now) / 60000));
-                    return { mins, dest: item.dest_tc || "" };
-                })
-                .sort((a, b) => a.mins - b.mins)
-                .slice(0, 2);
-
-            return { conf, etaList: validEtas };
-        } catch (e) {
-            console.error(`九巴 ${conf.route} 載入失敗:`, e);
-            return { conf, etaList: [] };
-        }
-    });
-
-    const results = await Promise.all(promises);
-
-    results.forEach(({ conf, etaList }) => {
-        if (etaList.length === 0) return;
-
-        fullHtml += `<div class="route-group">`;
-        fullHtml += `
-            <div class="route-header">
-                <img src="${logoUrl}" alt="logo" class="company-logo">
-                <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "主要車站"})</span>
-            </div>
-        `;
-
-        etaList.forEach((item, index) => {
-            const etaText = item.mins <= 0 ? "即將到站" : `${item.mins} 分鐘`;
-
-            let colorClass = "eta-green";
-            if (item.mins <= 2) colorClass = "eta-red";
-            else if (item.mins <= 5) colorClass = "eta-orange";
-
-            const destText = item.dest ? ` (${item.dest})` : "";
-
-            if (index === 0) {
-                fullHtml += `
-                    <div class="first-eta-item">
-                        <span class="first-eta-dest">${destText}</span>
-                        <span class="first-eta-time ${colorClass}">${etaText}</span>
-                    </div>
-                `;
-            } else {
-                fullHtml += `
-                    <div class="next-eta-item">
-                        <span>下班車：${destText}</span>
-                        <span>${etaText}</span>
-                    </div>
-                `;
-            }
-        });
-
-        fullHtml += `</div>`;
-    });
-
-    if (fullHtml === "") {
-        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
-    }
-
-    container.innerHTML = fullHtml;
+ 
+const container =
+document.getElementById("kmb");
+ 
+if (!container)
+return;
+ 
+container.innerHTML =
+"載入中...";
+ 
+const results = await Promise.all(
+ 
+kmbConfigs
+.filter(
+c => c.route && c.route.trim()
+)
+.map(
+conf => fetchSingleKmb(conf)
+)
+ 
+);
+ 
+const html =
+results
+.filter(Boolean)
+.join("");
+ 
+container.innerHTML =
+html ||
+"目前沒有到站資料";
 }
-
+ 
+ 
+// =====================================
+// 查詢單一路線
+// =====================================
+ 
+async function fetchSingleKmb(conf) {
+ 
+try {
+ 
+const route =
+conf.route.trim().toUpperCase();
+ 
+const stopKeyword =
+conf.stopName.trim();
+ 
+const bound =
+conf.dir === "inbound"
+? "inbound"
+: "outbound";
+ 
+// 取得路線車站
+ 
+const routeStopRes =
+await fetch(
+ 
+`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`
+ 
+);
+ 
+const routeStopData =
+await routeStopRes.json();
+ 
+if (
+!routeStopData.data ||
+routeStopData.data.length === 0
+) {
+ 
+return "";
+}
+ 
+let targetStop = null;
+ 
+// 搜尋站名
+ 
+for (const item of routeStopData.data) {
+ 
+const stopRes =
+await fetch(
+ 
+`https://data.etabus.gov.hk/v1/transport/kmb/stop/${item.stop}`
+ 
+);
+ 
+const stopData =
+await stopRes.json();
+ 
+if (
+stopData.data &&
+stopData.data.name_tc &&
+stopData.data.name_tc.includes(
+stopKeyword
+)
+) {
+ 
+targetStop = {
+stopId: item.stop,
+stopName:
+stopData.data.name_tc
+};
+ 
+break;
+}
+}
+ 
+if (!targetStop) {
+ 
+return `
+<div class="route-group">
+<div class="route-header">
+<span class="route-no">
+${route}
+</span>
+</div>
+ 
+<div class="next-eta-item">
+找不到車站：
+${stopKeyword}
+</div>
+</div>
+`;
+}
+ 
+// ETA
+ 
+const etaRes =
+await fetch(
+ 
+`https://data.etabus.gov.hk/v1/transport/kmb/eta/${targetStop.stopId}/${route}/1`
+ 
+);
+ 
+const etaData =
+await etaRes.json();
+ 
+if (
+!etaData.data ||
+etaData.data.length === 0
+) {
+ 
+return "";
+}
+ 
+const validEta =
+ 
+etaData.data
+ 
+.filter(
+item =>
+item.route === route &&
+item.eta
+)
+ 
+.slice(0, 2);
+ 
+if (validEta.length === 0)
+return "";
+ 
+let html = `
+ 
+<div class="route-group">
+ 
+<div class="route-header">
+ 
+<span class="route-no">
+${route}
+</span>
+ 
+<span class="route-stop">
+(${targetStop.stopName})
+</span>
+ 
+</div>
+`;
+ 
+validEta.forEach(
+(item, index) => {
+ 
+const mins =
+Math.max(
+0,
+Math.round(
+(
+new Date(item.eta)
+-
+new Date()
+) / 60000
+)
+);
+ 
+const etaText =
+mins <= 0
+? "即將到站"
+: `${mins} 分鐘`;
+ 
+let colorClass =
+"eta-green";
+ 
+if (mins <= 2) {
+ 
+colorClass =
+"eta-red";
+ 
+}
+else if (mins <= 5) {
+ 
+colorClass =
+"eta-orange";
+ 
+}
+ 
+if (index === 0) {
+ 
+html += `
+<div class="first-eta-item">
+ 
+<span class="first-eta-dest">
+${item.dest_tc || ""}
+</span>
+ 
+<span class="
+first-eta-time
+${colorClass}
+">
+${etaText}
+</span>
+ 
+</div>
+`;
+}
+else {
+ 
+html += `
+<div class="next-eta-item">
+ 
+<span>
+下班車
+</span>
+ 
+<span>
+${etaText}
+</span>
+ 
+</div>
+`;
+}
+}
+);
+ 
+html += "</div>";
+ 
+return html;
+ 
+}
+catch (e) {
+ 
+console.error(
+"KMB Error",
+conf.route,
+e
+);
+ 
+return "";
+}
+}
+ 
+ 
+// =====================================
+// 儲存設定
+// =====================================
+ 
 function saveAndFetchKmb() {
-    for (let i = 0; i < 3; i++) {
-        const routeEl = document.getElementById(`kmb-route-${i + 1}`);
-        const stopEl = document.getElementById(`kmb-stop-${i + 1}`);
-        const dirEl = document.getElementById(`kmb-dir-${i + 1}`);
-
-        const route = routeEl ? routeEl.value.trim().toUpperCase() : "";
-        const stopName = stopEl ? stopEl.value.trim() : "";
-        const dir = dirEl ? dirEl.value : "outbound";
-
-        kmbConfigs[i] = { route, stopName, dir };
-    }
-
-    localStorage.setItem("kmb_configs", JSON.stringify(kmbConfigs));
-
-    if (typeof toggleSettings === "function") {
-        toggleSettings("kmb-settings");
-    }
-
-    fetchAllKmbETA();
+ 
+for (let i = 0; i < 3; i++) {
+ 
+const route =
+document
+.getElementById(
+`kmb-route-${i + 1}`
+)
+?.value
+.trim()
+.toUpperCase() || "";
+ 
+const stopName =
+document
+.getElementById(
+`kmb-stop-${i + 1}`
+)
+?.value
+.trim() || "";
+ 
+const dir =
+document
+.getElementById(
+`kmb-dir-${i + 1}`
+)
+?.value ||
+"outbound";
+ 
+kmbConfigs[i] = {
+route,
+stopName,
+dir
+};
 }
-
-setInterval(() => {
-    fetchAllKmbETA();
-}, 30000);
-
+ 
+localStorage.setItem(
+"kmb_configs",
+JSON.stringify(
+kmbConfigs
+)
+);
+ 
+if (
+typeof toggleSettings
+=== "function"
+) {
+toggleSettings(
+"kmb-settings"
+);
+}
+ 
+fetchAllKmbETA();
+}
+ 
+ 
+// =====================================
+// 自動更新
+// =====================================
+ 
+setInterval(
+fetchAllKmbETA,
+30000
+);
