@@ -1,5 +1,5 @@
 // =====================================
-// 港鐵巴士 ETA Widget (隱藏無班次路線版)
+// 港鐵巴士 ETA Widget (容錯增強版)
 // =====================================
 
 let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
@@ -62,20 +62,20 @@ async function fetchAllMtrbusETA() {
         if (data && data.status === "1" && data.busStop && data.busStop.length > 0) {
             let targetStops = data.busStop;
 
-            // 1. 站名關鍵字匹配
+            // 站名匹配 (支援繁簡與模糊比對)
             if (conf.stopName && conf.stopName.trim() !== "") {
-                const keyword = conf.stopName.trim();
+                const keyword = conf.stopName.trim().replace("邨", "").replace("村", "");
                 const matched = data.busStop.filter(s => {
                     const name1 = s.busStopTitleName || "";
                     const name2 = s.busStopName || "";
-                    return name1.includes(keyword) || name2.includes(keyword);
+                    return name1.includes(keyword) || name2.includes(keyword) || name1.includes(conf.stopName) || name2.includes(conf.stopName);
                 });
                 if (matched.length > 0) {
                     targetStops = matched;
                 }
             }
 
-            // 2. 提取班次時間
+            // 提取時間
             targetStops.forEach(stop => {
                 if (stop.bus && Array.isArray(stop.bus)) {
                     stop.bus.forEach(b => {
@@ -103,17 +103,12 @@ async function fetchAllMtrbusETA() {
                 }
             });
 
-            // 按時間排序並取前兩班
             etaList.sort((a, b) => a.mins - b.mins);
             etaList = etaList.slice(0, 2);
         }
 
-        // 核心修改：如果該路線完全沒有班次，直接跳過不繪製 HTML（即隱藏）
-        if (etaList.length === 0) {
-            return;
-        }
+        if (etaList.length === 0) return;
 
-        // 只有有班次時，才拼接 HTML
         fullHtml += `<div class="route-group">`;
         fullHtml += `
             <div class="route-header">
@@ -152,7 +147,6 @@ async function fetchAllMtrbusETA() {
         fullHtml += `</div>`;
     });
 
-    // 如果所有設定的路線都沒有班次，顯示提示文字（⚙️ 設定按鈕在 Header 不受影響）
     if (fullHtml === "") {
         fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
     }
