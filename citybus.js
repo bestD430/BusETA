@@ -1,23 +1,23 @@
 // =====================================
-// 城巴 ETA Widget (隱藏無班次路線版)
+// 城巴 ETA Widget (預設：逸東邨雍逸樓 inbound)
 // =====================================
 
 let citybusConfigs = JSON.parse(localStorage.getItem("citybus_configs")) || [
-    { route: "E21A", stopName: "逸東邨雍逸樓", dir: "outbound" },
-    { route: "E21B", stopName: "逸東邨雍逸樓", dir: "outbound" },
-    { route: "S52", stopName: "逸東邨總站", dir: "outbound" }
+    { route: "E21A", stopName: "逸東邨雍逸樓", dir: "inbound" },
+    { route: "E21B", stopName: "逸東邨雍逸樓", dir: "inbound" },
+    { route: "S52", stopName: "逸東邨雍逸樓", dir: "inbound" }
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < 3; i++) {
-        const conf = citybusConfigs[i] || { route: "", stopName: "", dir: "outbound" };
+        const conf = citybusConfigs[i] || { route: "", stopName: "", dir: "inbound" };
         const routeEl = document.getElementById(`citybus-route-${i + 1}`);
         const stopEl = document.getElementById(`citybus-stop-${i + 1}`);
         const dirEl = document.getElementById(`citybus-dir-${i + 1}`);
 
         if (routeEl) routeEl.value = conf.route;
         if (stopEl) stopEl.value = conf.stopName;
-        if (dirEl) dirEl.value = conf.dir || "outbound";
+        if (dirEl) dirEl.value = conf.dir || "inbound";
     }
 
     fetchAllCitybusETA();
@@ -40,15 +40,16 @@ async function fetchAllCitybusETA() {
     const promises = activeConfigs.map(async (conf) => {
         try {
             const route = conf.route.trim().toUpperCase();
+            const boundParam = conf.dir === "inbound" ? "inbound" : "outbound";
             const dir = conf.dir === "inbound" ? "I" : "O";
 
             // 1. 取得該路線的車站對照表
-            const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${conf.dir === "inbound" ? "inbound" : "outbound"}`);
+            const routeStopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/citybus-nwfb/route-stop/CTB/${route}/${boundParam}`);
             const routeStopsData = await routeStopsRes.json();
 
             if (!routeStopsData.data || routeStopsData.data.length === 0) return { conf, etaList: [] };
 
-            // 2. 尋找車站 ID
+            // 2. 尋找符合關鍵字的車站 ID
             let stopId = null;
             if (conf.stopName && conf.stopName.trim() !== "") {
                 const keyword = conf.stopName.trim();
@@ -147,7 +148,7 @@ function saveAndFetchCitybus() {
 
         const route = routeEl ? routeEl.value.trim().toUpperCase() : "";
         const stopName = stopEl ? stopEl.value.trim() : "";
-        const dir = dirEl ? dirEl.value : "outbound";
+        const dir = dirEl ? dirEl.value : "inbound";
 
         citybusConfigs[i] = { route, stopName, dir };
     }
