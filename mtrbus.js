@@ -1,5 +1,5 @@
 // =====================================
-// 港鐵巴士 ETA Widget (增強穩定版)
+// 港鐵巴士 ETA Widget (隱藏無班次路線版)
 // =====================================
 
 let mtrbusConfigs = JSON.parse(localStorage.getItem("mtrbus_configs")) || [
@@ -31,7 +31,7 @@ async function fetchAllMtrbusETA() {
     const activeConfigs = mtrbusConfigs.filter(c => c.route && c.route.trim() !== "");
 
     if (activeConfigs.length === 0) {
-        container.innerHTML = "<div style='color:#aaa;'>請點擊「⚙️ 設定」輸入路線與站名</div>";
+        container.innerHTML = "<div style='color:#888; padding: 10px 0;'>請點擊上方「⚙️ 設定」輸入路線</div>";
         return;
     }
 
@@ -57,21 +57,12 @@ async function fetchAllMtrbusETA() {
     const results = await Promise.all(promises);
 
     results.forEach(({ conf, data }) => {
-        fullHtml += `<div class="route-group">`;
-        fullHtml += `
-            <div class="route-header">
-                <img src="${logoUrl}" alt="logo" class="company-logo">
-                <span class="route-no">${conf.route}</span>
-                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
-            </div>
-        `;
-
         let etaList = [];
 
         if (data && data.status === "1" && data.busStop && data.busStop.length > 0) {
             let targetStops = data.busStop;
 
-            // 1. 若有輸入站名，嘗試搜尋包含關鍵字的車站
+            // 1. 站名關鍵字匹配
             if (conf.stopName && conf.stopName.trim() !== "") {
                 const keyword = conf.stopName.trim();
                 const matched = data.busStop.filter(s => {
@@ -90,11 +81,9 @@ async function fetchAllMtrbusETA() {
                     stop.bus.forEach(b => {
                         let mins = null;
 
-                        // 判斷剩餘秒數或時間字串
                         if (b.arrivalTimeInSecond !== undefined && b.arrivalTimeInSecond !== null) {
                             mins = Math.max(0, Math.floor(b.arrivalTimeInSecond / 60));
                         } else if (b.arrivalTimeText) {
-                            // 若無秒數，由時間文字解析
                             const parts = b.arrivalTimeText.split(":");
                             if (parts.length === 2) {
                                 const now = new Date();
@@ -119,37 +108,54 @@ async function fetchAllMtrbusETA() {
             etaList = etaList.slice(0, 2);
         }
 
+        // 核心修改：如果該路線完全沒有班次，直接跳過不繪製 HTML（即隱藏）
         if (etaList.length === 0) {
-            fullHtml += `<div style="font-size: 13px; color: #888; padding: 4px 0;">暫無到站班次</div>`;
-        } else {
-            etaList.forEach((item, index) => {
-                const etaText = item.mins <= 0 ? "即將到站" : `${item.mins} 分鐘`;
-
-                let colorClass = "eta-green";
-                if (item.mins <= 2) colorClass = "eta-red";
-                else if (item.mins <= 5) colorClass = "eta-orange";
-
-                const destText = item.dest ? ` (${item.dest})` : "";
-
-                if (index === 0) {
-                    fullHtml += `
-                        <div class="first-eta-item">
-                            <span class="first-eta-dest">${destText}</span>
-                            <span class="first-eta-time ${colorClass}">${etaText}</span>
-                        </div>
-                    `;
-                } else {
-                    fullHtml += `
-                        <div class="next-eta-item">
-                            <span>下班車：${destText}</span>
-                            <span>${etaText}</span>
-                        </div>
-                    `;
-                }
-            });
+            return;
         }
+
+        // 只有有班次時，才拼接 HTML
+        fullHtml += `<div class="route-group">`;
+        fullHtml += `
+            <div class="route-header">
+                <img src="${logoUrl}" alt="logo" class="company-logo">
+                <span class="route-no">${conf.route}</span>
+                <span class="route-stop">(${conf.stopName || "所有車站"})</span>
+            </div>
+        `;
+
+        etaList.forEach((item, index) => {
+            const etaText = item.mins <= 0 ? "即將到站" : `${item.mins} 分鐘`;
+
+            let colorClass = "eta-green";
+            if (item.mins <= 2) colorClass = "eta-red";
+            else if (item.mins <= 5) colorClass = "eta-orange";
+
+            const destText = item.dest ? ` (${item.dest})` : "";
+
+            if (index === 0) {
+                fullHtml += `
+                    <div class="first-eta-item">
+                        <span class="first-eta-dest">${destText}</span>
+                        <span class="first-eta-time ${colorClass}">${etaText}</span>
+                    </div>
+                `;
+            } else {
+                fullHtml += `
+                    <div class="next-eta-item">
+                        <span>下班車：${destText}</span>
+                        <span>${etaText}</span>
+                    </div>
+                `;
+            }
+        });
+
         fullHtml += `</div>`;
     });
+
+    // 如果所有設定的路線都沒有班次，顯示提示文字（⚙️ 設定按鈕在 Header 不受影響）
+    if (fullHtml === "") {
+        fullHtml = `<div style="font-size: 13px; color: #888; padding: 10px 0;">目前所有設定路線均無班次</div>`;
+    }
 
     container.innerHTML = fullHtml;
 }
