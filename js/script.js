@@ -1,17 +1,21 @@
-// 請替換為您的目標站點資訊 (以九巴 1A 線往尖沙咀碼頭的某一站為例)
-var API_URL = "https://data.etabus.gov.hk/v1/transport/kmb/eta/B1A1234567890123/1A/1"; 
+// 九巴 1A 線（往尖沙咀碼頭）- 秀茂坪邨秀樂樓站 (Stop ID: B2A29C5B64E4D3E6)
+var API_URL = "https://data.etabus.gov.hk/v1/transport/kmb/eta/B2A29C5B64E4D3E6/1A/1";
 
 function fetchETA() {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", API_URL, true);
-  
+
   xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      try {
-        var response = JSON.parse(xhr.responseText);
-        updateUI(response.data);
-      } catch (e) {
-        console.error("JSON 解析失敗", e);
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        try {
+          var response = JSON.parse(xhr.responseText);
+          updateUI(response.data);
+        } catch (e) {
+          console.error("JSON 解析失敗", e);
+        }
+      } else {
+        console.error("API 請求失敗，狀態碼：", xhr.status);
       }
     }
   };
@@ -31,8 +35,8 @@ function updateUI(data) {
   }
 
   var now = new Date();
-  document.getElementById("update-time").innerText = 
-    "最後更新: " + now.getHours() + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+  document.getElementById("update-time").innerText =
+    "最後更新: " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
 }
 
 function calculateMinutes(etaTime) {
@@ -48,6 +52,6 @@ function pad(num) {
   return num < 10 ? "0" + num : num;
 }
 
-// 首次載入並設定每 30 秒自動更新
+// 首次載入與定時更新
 fetchETA();
 setInterval(fetchETA, 30000);
