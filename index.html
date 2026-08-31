@@ -1,41 +1,35 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
- 
-<title>交通資訊板</title>
- 
-<link rel="stylesheet" href="style.css">
-ader">
-<div id="clock">--:--:--</div>
-<div id="date"></div>
-</div>
- 
-<div class="card">
-<h2>天氣</h2>
-<div id="weather">載入中...</div>
-</div>
- 
-<div class="card">
-<h2>天文台警告</h2>
-<div id="warning">載入中...</div>
-</div>
- 
-<div class="card">
-<h2>KMB</h2>
-<div id="kmb">載入中...</div>
-</div>
- 
-<div class="card">
-<h2>CITYBUS</h2>
-<div id="citybus">載入中...</div>
-</div>
- 
-<script src="js/clock.jsather.jsscript>
-<script src="script>
-<script src="js/kmb.js"></s.jsscript>
- 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>巴士到站牌</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="board">
+    <div class="header">
+      <span class="route-no" id="route">1A</span>
+      <span class="destination" id="dest">往 尖沙咀碼頭</span>
+    </div>
+    
+    <div class="eta-list">
+      <div class="eta-item">
+        <span class="label">下一班</span>
+        <span class="time" id="eta1">載入中...</span>
+      </div>
+      <div class="eta-item">
+        <span class="label">第二班</span>
+        <span class="time" id="eta2">--</span>
+      </div>
+      <div class="eta-item">
+        <span class="label">第三班</span>
+        <span class="time" id="eta3">--</span>
+      </div>
+    </div>
+    <div class="footer" id="update-time">最後更新: --:--:--</div>
+  </div>
+
+  <script src="js/script.js"></script>
 </body>
 </html>
