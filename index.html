@@ -7,26 +7,82 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- 設定按鈕 -->
+  <button id="settings-btn" class="icon-btn">⚙️ 設定</button>
+
+  <!-- 設定彈出面板 -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>設定站牌資訊</h2>
+      
+      <div class="form-group">
+        <label for="company-select">巴士公司：</label>
+        <select id="company-select">
+          <option value="KMB">九巴 (KMB)</option>
+          <option value="LWB">龍運 (LWB)</option>
+          <option value="CTB">城巴 (Citybus)</option>
+          <option value="NLB">新大嶼山巴士 (NLB)</option>
+          <option value="MTRBUS">港鐵巴士 (MTR Bus)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="route-input">路線號碼：</label>
+        <div class="input-group">
+          <input type="text" id="route-input" placeholder="例如: 1A, E33, A21">
+          <button id="search-route-btn">搜尋路線</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bound-select">行車方向（目的地）：</label>
+        <select id="bound-select" disabled>
+          <option value="">請先輸入路線號碼並搜尋</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="stop-select">車站位置：</label>
+        <select id="stop-select" disabled>
+          <option value="">請先選擇方向</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button id="save-btn" class="primary-btn">儲存並顯示</button>
+        <button id="close-btn" class="secondary-btn">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 到站牌顯示主體 -->
   <div class="board">
     <div class="header">
-      <span class="route-no" id="route">1A</span>
-      <span class="destination" id="dest">往 尖沙咀碼頭</span>
+      <span class="route-no" id="display-route">--</span>
+      <span class="destination" id="display-dest">請點擊設定選擇路線</span>
     </div>
+    <div class="stop-name" id="display-stop">--</div>
     
-    <div class="eta-list">
-      <div class="eta-item">
-        <span class="label">下一班</span>
-        <span class="time" id="eta1">載入中...</span>
+    <div class="eta-container">
+      <!-- 最先到達：大字體突出顯示 -->
+      <div class="eta-card primary-eta">
+        <span class="label">即將到達 (首班)</span>
+        <span class="time" id="eta1">--</span>
       </div>
-      <div class="eta-item">
-        <span class="label">第二班</span>
-        <span class="time" id="eta2">--</span>
-      </div>
-      <div class="eta-item">
-        <span class="label">第三班</span>
-        <span class="time" id="eta3">--</span>
+
+      <!-- 次要班次 -->
+      <div class="secondary-eta-group">
+        <div class="eta-card">
+          <span class="label">次班</span>
+          <span class="time" id="eta2">--</span>
+        </div>
+        <div class="eta-card">
+          <span class="label">三班</span>
+          <span class="time" id="eta3">--</span>
+        </div>
       </div>
     </div>
+
     <div class="footer" id="update-time">最後更新: --:--:--</div>
   </div>
 
